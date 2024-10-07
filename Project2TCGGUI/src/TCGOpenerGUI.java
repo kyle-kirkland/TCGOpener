@@ -148,9 +148,10 @@ import javax.swing.JLayeredPane;
             desk = new JLayeredPane();
             desk.setPreferredSize(wideScreen);
 
+            TEMPboosterpackPath = "/card_packs/charizard_pack.jpg";
             deskImagePath = "/backgrounds/wood_desk.png";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
-            packImage = new ImageIcon(TEMPboosterpackPath).getImage();
+            packImage = new ImageIcon(getClass().getResource(TEMPboosterpackPath)).getImage();
 
             int cardsUnpackingWidth = (wideScreen.width - packsize.width)/ 2;
             int cardsUnpackingHeight = (wideScreen.height - packsize.height)/ 2;
