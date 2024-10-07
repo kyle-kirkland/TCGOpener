@@ -7,6 +7,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -35,12 +36,16 @@ import javax.swing.JLayeredPane;
  * - Maybe add a sleeve animation for super rares
  * - Layout opened cards beside each other
  * - Each booster pack has 11 cards
+ *      - 1 rare
+ *      - 3 uncommon 
+ *      - 5 commons
+ *      - 2 energy cards
  * - View hierarchy (priority = number of *):
  *      - Main JFrame ***
  *          - root JPanel (CardLayout) ***
  *              - startscreen JPanel (GridBagLayout) **
  *              - collection JPanel (GridBagLayout) **
- *              - desk JLayeredPane (GridBagLayout) ***
+ *              - desk JLayeredPane ***
  *                  - cardsUnpacking JPanel (GridBagLayout) ***
  *                  - cardsDisplayed JPanel (GridBagLayout) ***
  *                      - boosterCard CardPanel(or maybe CardLabel, idk yet) (CardLayout) ***
@@ -148,7 +153,7 @@ import javax.swing.JLayeredPane;
             desk = new JLayeredPane();
             desk.setPreferredSize(wideScreen);
 
-            TEMPboosterpackPath = "/card_packs/charizard_pack.jpg";
+            TEMPboosterpackPath = "/card_packs/charizard_pack.png";
             deskImagePath = "/backgrounds/wood_desk.png";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
             packImage = new ImageIcon(getClass().getResource(TEMPboosterpackPath)).getImage();
@@ -233,6 +238,18 @@ import javax.swing.JLayeredPane;
                 CardLayout layout = (CardLayout) root.getLayout();
                 layout.show(root, "Collection");
             }
+        }
+
+        public int[] buildPack() {
+            int[] pack = new int[11];
+
+            return pack;
+        }
+
+        public ArrayList<ImageIcon> assignImagestoPack() {
+            ArrayList<ImageIcon> packImages = new ArrayList<ImageIcon>();
+
+            return packImages;
         }
         /**
         * Resizes an image to the specified width and height.
