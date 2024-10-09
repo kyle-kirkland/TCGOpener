@@ -95,9 +95,6 @@ import javax.swing.JLayeredPane;
             createMainPanel();
 
             gbConst = new GridBagConstraints();
-            boosterPack = new JLabel(TEMPboosterpackPath);
-            boosterCard = new CardLabel(TEMPcardFrontPath, TEMPcardBackPath);
-
             startOpening = new JButton("Start Opening");
             newPack = new JButton("Open New Pack");
             currentCollection = new JButton("Show Current Collection");
@@ -364,71 +361,97 @@ import javax.swing.JLayeredPane;
             return newPack;
         }
         // Might change this to ArrayList of JLabels and add the ImageIcons within method
-        public ArrayList<ImageIcon> assignImagestoPack(int[] pack, boolean revealMethod) {
-            ArrayList<ImageIcon> packImages = new ArrayList<ImageIcon>();
+        public ArrayList<JLabel> assignImagestoPack(int[] pack, boolean revealMethod) {
+            ArrayList<JLabel> packImages = new ArrayList<JLabel>();
             String commonPath = "/cardImages/largeCards/common/common(";
             String energyPath = "/cardImages/largeCards/energy/energy(";
             String rarePath = "/cardImages/largeCards/rare/rare(";
             String holoPath = "/cardImages/largeCards/holo/holo(";
             String uncommonPath = "/cardImages/largeCards/uncommon/uncommon(";
+            String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
+            String charizardPackPath = "/card_packs/charizard_pack.jpg";
+            String blastoisePackPath = "/card_packs/blastoise_pack.jpg";
             boolean rareLast = revealMethod;
+            boosterPack = new JLabel();
 
             // Normal card reveal method
             if (!rareLast) {
                 for (int i = 0; i < pack.length; i++) {
                     if (i < 5) {
                         String currentCommon = commonPath + pack[i] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentCommon)));
+                        boosterCard = new CardLabel(currentCommon);
+                        packImages.add(boosterCard);
                     }
                     else if (i >= 5 && i < 7) {
                         String currentEnergy = energyPath + pack[i] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentEnergy)));
+                        boosterCard = new CardLabel(currentEnergy);
+                        packImages.add(boosterCard);
                     }
                     else if (i == 7) {
                         Random rng = new Random();
                         if (rng.nextInt(4) == 3) {
                             String currentHolo = holoPath + pack[i] + ").jpg";
-                            packImages.add(new ImageIcon(getClass().getResource(currentHolo)));
+                            boosterCard = new CardLabel(currentHolo);
+                            packImages.add(boosterCard);
                         }
                         else {
                             String currentRare = rarePath + pack[i] + ").jpg";
-                            packImages.add(new ImageIcon(getClass().getResource(currentRare)));   
+                            boosterCard = new CardLabel(currentRare); 
+                            packImages.add(boosterCard);
                         }
                     }
                     else if (i >= 9 && i <= 10) {
                         String currentUncommon = uncommonPath + pack[i] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentUncommon)));
+                        boosterCard = new CardLabel(currentUncommon);
+                        packImages.add(boosterCard);
                     }
                 }
+                
             }
             // Reveal rare card last method
             if (rareLast) {
                 for (int j = 0; j < pack.length; j++) {
                     if (j < 5) {
                         String currentCommon = commonPath + pack[j] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentCommon)));
+                        boosterCard = new CardLabel(currentCommon);
+                        packImages.add(boosterCard);
                     }
                     else if (j >= 5 && j < 7) {
                         String currentEnergy = energyPath + pack[j] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentEnergy)));
+                        boosterCard = new CardLabel(currentEnergy);
+                        packImages.add(boosterCard);
                     }
                     else if (j >= 7 && j < 10) {
                         String currentUncommon = uncommonPath + pack[j] + ").jpg";
-                        packImages.add(new ImageIcon(getClass().getResource(currentUncommon)));
+                        boosterCard = new CardLabel(currentUncommon);
+                        packImages.add(boosterCard);
                     }
                     else if ( j == 10) {
                         Random rng = new Random();
                         if (rng.nextInt(4) == 3) {
                             String currentHolo = holoPath + pack[j] + ").jpg";
-                            packImages.add(new ImageIcon(getClass().getResource(currentHolo)));
+                            boosterCard = new CardLabel(currentHolo);
+                            packImages.add(boosterCard);
                         }
                         else {
                             String currentRare = rarePath + pack[j] + ").jpg";
-                            packImages.add(new ImageIcon(getClass().getResource(currentRare)));   
+                            boosterCard = new CardLabel(currentRare);
+                            packImages.add(boosterCard);   
                         }
                     }
                 }
             }
+            Random rng2 = new Random();
+            if (rng2.nextInt(2) == 0) {
+                boosterPack.setIcon(new ImageIcon(getClass().getResource(venusaurPackPath)));
+            }
+            else if (rng2.nextInt(2) == 1) {
+                boosterPack.setIcon(new ImageIcon(getClass().getResource(charizardPackPath)));
+            }
+            else if (rng2.nextInt(2) == 2) {
+                boosterPack.setIcon(new ImageIcon(getClass().getResource(blastoisePackPath)));
+            }
+            packImages.add(0, boosterPack);
             return packImages;
         }
         /**
@@ -466,25 +489,29 @@ import javax.swing.JLayeredPane;
             boolean isBig = false;
             
             // Need to make sure cards are properly sorted in specific folders to be used here
-            public CardLabel(String cardFrontImagePath, String cardBackImagePath) {
-                
-                setIcon(resizeImage(this.cardBackImagePath, sizeX, sizeY));
+            public CardLabel(String cardFrontImagePath) {
+                String cardBackImagePath = "/cardBacks/cardBack.png";
+                // setIcon(resizeImage(this.cardBackImagePath, sizeX, sizeY));
+                setIcon(new ImageIcon(getClass().getResource(cardFrontImagePath)));
 
 
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        if (!isRevealed) {
-                            if (event.getClickCount() == 1) {
-                                setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-                                isRevealed = true;
-                            }
-                        }   
-                        else {
-                            if (event.isShiftDown() || event.getClickCount() == 2) {
-                                swapCardSize();
-                            }
+                        if (event.isShiftDown()) {
+                            swapCardSize();
                         }
+                        //if (!isRevealed) {
+                        //    if (event.getClickCount() == 1) {
+                        //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
+                        //        isRevealed = true;
+                        //    }
+                        //}   
+                        //else {
+                        //    if (event.isShiftDown()) {
+                        //        swapCardSize();
+                        //    }
+                        //}
                     }
                 });
             }
