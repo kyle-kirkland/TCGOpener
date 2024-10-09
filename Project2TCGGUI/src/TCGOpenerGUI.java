@@ -1,5 +1,6 @@
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 //import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,9 +68,9 @@ import javax.swing.JLayeredPane;
         private JPanel cardsDisplayed;
         private JPanel hand;
         private JPanel cardHolder;
-        private JLabel boosterPack;
         private JLabel initialPack;
         private CardLabel boosterCard;
+        private PackLabel boosterPack;
         private GridBagConstraints gbConst;
         private JButton fromWelcometoDesk;
         private JButton fromWelcometoCollection;
@@ -84,7 +85,6 @@ import javax.swing.JLayeredPane;
         private Dimension cardHolderDimension = new Dimension(1200, 900);
         private Dimension wideScreen = new Dimension(1920, 1080);
         private Image deskImage;
-        private Image packImage;
         private String frameTitle;
         private String deskImagePath;
         private String TEMPcardFrontPath; // Until the directories are created
@@ -98,8 +98,9 @@ import javax.swing.JLayeredPane;
 
             gbConst = new GridBagConstraints();
             startOpening = new JButton("Start Opening");
-            newPack = new JButton("Open New Pack");
             currentCollection = new JButton("Show Current Collection");
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setVisible(true);
 
         }
 
@@ -169,11 +170,12 @@ import javax.swing.JLayeredPane;
 
             initialPack = new JLabel();
             hand = new JPanel();
-            unpackCards(hand);
             hand.setLayout(new BorderLayout());
             hand.setPreferredSize(packsize);
-            hand.setBackground(Color.GRAY);
+            hand.setBackground(null);
+            hand.setOpaque(false);
             hand.setBounds(handWidth, handHeight, packsize.width, packsize.height);
+            unpackCards(hand);
 
             cardsDisplayed = new JPanel() {
                 @Override
@@ -186,18 +188,17 @@ import javax.swing.JLayeredPane;
             cardsDisplayed.setBackground(Color.GRAY);
             cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
-            JLabel tempCard = new JLabel();
-            String tempCardImagePath = "/cardImages/smallCards/common/common(1).jpg";
-            ImageIcon tempCardImage = new ImageIcon(getClass().getResource(tempCardImagePath));
-            tempCard.setIcon(tempCardImage);
             cardHolder = new JPanel();
-            cardHolder.setLayout(new GridBagLayout());
+            gbConst.gridwidth = 4;
+            gbConst.gridheight = 3;
+            cardHolder.setLayout(new GridLayout(3, 4, 5, 5));
             cardHolder.setPreferredSize(cardHolderDimension);
             cardHolder.setBackground(null);
             cardHolder.setOpaque(false);
             cardHolder.setBounds(50, 50, cardHolderDimension.width, cardHolderDimension.height);
-            cardHolder.add(tempCard);
 
+            newPack = new JButton("Open New Pack");
+            newPack.addActionListener(this);
             revealNormal = new JButton("Reveal Normal Order");
             revealNormal.addActionListener(this);
             revealRare = new JButton("Reveal Rare Last");
@@ -210,8 +211,11 @@ import javax.swing.JLayeredPane;
             gbConst.gridy = 0;
             cardsDisplayed.add(revealNormal, gbConst);
 
-            gbConst.gridy = 1;
+            gbConst.gridx = 1;
             cardsDisplayed.add(revealRare, gbConst);
+
+            gbConst.gridx = 2;
+            cardsDisplayed.add(newPack, gbConst);
 
             gbConst.insets = new Insets(10, 10, 10, 10);
             gbConst.gridx = 0;
@@ -251,8 +255,6 @@ import javax.swing.JLayeredPane;
             setLocationRelativeTo(null);
             add(root);
 
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
-            setVisible(true);
         }
 
         @Override
@@ -270,6 +272,9 @@ import javax.swing.JLayeredPane;
             }
             else if (event.getSource() == revealRare) {
                 revealLast = true;
+            }
+            else if (event.getSource() == newPack) {
+                unpackCards(hand);
             }
         }
 
@@ -337,35 +342,37 @@ import javax.swing.JLayeredPane;
             *      - 3 uncommon
             */
 
-            int[] pack = new int[11];
+            int[] pack = new int[12];
             if (!revealLast) {
-                pack[0] = randCommon();
+                pack[0] = 0;
                 pack[1] = randCommon();
                 pack[2] = randCommon();
                 pack[3] = randCommon();
                 pack[4] = randCommon();
-                pack[5] = randEnergy();
+                pack[5] = randCommon();
                 pack[6] = randEnergy();
-                pack[7] = randRare();
+                pack[7] = randEnergy();
+                pack[8] = randRare();
+                pack[9] = randUncommon();
+                pack[10] = randUncommon();
+                pack[11] = randUncommon();
+            }
+            else {
+                pack[0] = 0;
+                pack[1] = randCommon();
+                pack[2] = randCommon();
+                pack[3] = randCommon();
+                pack[4] = randCommon();
+                pack[5] = randCommon();
+                pack[6] = randEnergy();
+                pack[7] = randEnergy();
                 pack[8] = randUncommon();
                 pack[9] = randUncommon();
                 pack[10] = randUncommon();
-            }
-            else {
-                pack[0] = randCommon();
-                pack[1] = randCommon();
-                pack[2] = randCommon();
-                pack[3] = randCommon();
-                pack[4] = randCommon();
-                pack[5] = randEnergy();
-                pack[6] = randEnergy();
-                pack[7] = randUncommon();
-                pack[8] = randUncommon();
-                pack[9] = randUncommon();
-                pack[10] = randRare();
+                pack[11] = randRare();
             }
 
-            int[] newPack = new int[11];
+            int[] newPack = new int[12];
             newPack = noDupes(pack);
 
             return newPack;
@@ -378,11 +385,8 @@ import javax.swing.JLayeredPane;
             String rarePath = "/cardImages/largeCards/rare/rare(";
             String holoPath = "/cardImages/largeCards/holo/holo(";
             String uncommonPath = "/cardImages/largeCards/uncommon/uncommon(";
-            String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
-            String charizardPackPath = "/card_packs/charizard_pack.jpg";
-            String blastoisePackPath = "/card_packs/blastoise_pack.jpg";
             boolean rareLast = revealMethod;
-            boosterPack = new JLabel();
+            boosterPack = new PackLabel();
 
             // Normal card reveal method
             if (!rareLast) {
@@ -451,35 +455,11 @@ import javax.swing.JLayeredPane;
                     }
                 }
             }
-            Random rng2 = new Random();
-            if (rng2.nextInt(2) == 0) {
-                boosterPack.setIcon(new ImageIcon(getClass().getResource(venusaurPackPath)));
-            }
-            else if (rng2.nextInt(2) == 1) {
-                boosterPack.setIcon(new ImageIcon(getClass().getResource(charizardPackPath)));
-            }
-            else if (rng2.nextInt(2) == 2) {
-                boosterPack.setIcon(new ImageIcon(getClass().getResource(blastoisePackPath)));
-            }
+
             packImages.add(0, boosterPack);
             return packImages;
         }
-        /**
-        * Resizes an image to the specified width and height.
-        * 
-        * <p>
-        * This method is currently part of the TCGOpenerGUI class as resizing images 
-        * is only used within the GUI to handle card resizing. If image resizing 
-        * is needed in other parts of the application in the future, this may be 
-        * consider refactoring this method into a utility class (e.g., ImageUtils) 
-        * for better reusability and separation of concerns.
-        * </p>
-        * 
-        * @param imagePath The file path of the image to be resized.
-        * @param width The desired width of the resized image.
-        * @param height The desired height of the resized image.
-        * @return A new ImageIcon with the resized image.
-        */
+        // Rewrite to change size of card, using an additional JPanel or resizing the JLabel? Idk yet
         public static ImageIcon resizeImage(String imgPath, int width, int height) {
             ImageIcon icon = new ImageIcon(imgPath);
             Image image = icon.getImage();
@@ -487,22 +467,78 @@ import javax.swing.JLayeredPane;
 
             return new ImageIcon(resizedImage);
         }
+
+        public class PackLabel extends JLabel{
+            ImageIcon randomPackImage = randomPack();
+            public String type = "pack";
+            public boolean isBig = false;
+
+            public PackLabel() {
+
+                setIcon(randomPackImage);
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.isShiftDown()) {
+                            swapCardSize();
+                        }
+                        else {
+                            removePack();
+                        }
+                    }
+                });
+            }
+            public void removePack() {
+                hand.remove(this);
+            }
+            private ImageIcon randomPack() {
+                String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
+                String charizardPackPath = "/card_packs/charizard_pack.jpg";
+                String blastoisePackPath = "/card_packs/blastoise_pack.jpg";
+                ImageIcon randomPackImage = new ImageIcon();
+                ImageIcon venusaurPack = new ImageIcon(getClass().getResource(venusaurPackPath));
+                ImageIcon charizardPack = new ImageIcon(getClass().getResource(charizardPackPath));
+                ImageIcon blastoisePack = new ImageIcon(getClass().getResource(blastoisePackPath));
+                Random rng2 = new Random();
+                int num = rng2.nextInt(2);
+                if (num == 0) {
+                    randomPackImage = venusaurPack;
+                }
+                else if (num == 1) {
+                    randomPackImage = charizardPack;
+                }
+                else if (num == 2) {
+                    randomPackImage = blastoisePack;
+                }
+                return randomPackImage;
+            }
+            // Need to rewrite this method, no longer using Images need to resize ImageIcons
+            public void swapCardSize() {
+                //if (!isBig) {
+                //    setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
+                //    isBig = true;
+                //} else {
+                //    setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
+                //    isBig = false;
+                //}
+            }
+        }
+
         public class CardLabel extends JLabel{
 
-            private String cardBackImagePath;
+            //private String cardBackImagePath; Not sure if needed
             private String cardFrontImagePath;
             private final int sizeX = 130;
             private final int sizeY = 180;
             private final int bigSizeX = 200;
             private final int bigSizeY = 250;
-            boolean isRevealed = false;
-            boolean isBig = false;
+            public boolean isBig = false;
             
             // Need to make sure cards are properly sorted in specific folders to be used here
             public CardLabel(String cardFrontImagePath) {
-                String cardBackImagePath = "/cardBacks/cardBack.png";
-                // setIcon(resizeImage(this.cardBackImagePath, sizeX, sizeY));
-                setIcon(new ImageIcon(getClass().getResource(cardFrontImagePath)));
+                // String cardBackImagePath = "/cardBacks/cardBack.png"; Not sure if needed
+                // setIcon(resizeImage(this.cardBackImagePath, sizeX, sizeY)); Not sure if needed
+                setIcon(new ImageIcon(getClass().getResource(cardFrontImagePath))); // *****WHERE I LEFT OFF saying the location is null, need to specify location 
 
 
                 addMouseListener(new MouseAdapter() {
@@ -511,19 +547,15 @@ import javax.swing.JLayeredPane;
                         if (event.isShiftDown()) {
                             swapCardSize();
                         }
-                        //if (!isRevealed) {
-                        //    if (event.getClickCount() == 1) {
-                        //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-                        //        isRevealed = true;
-                        //    }
-                        //}   
-                        //else {
-                        //    if (event.isShiftDown()) {
-                        //        swapCardSize();
-                        //    }
-                        //}
+                        else {
+                            fromHandtoDesk();
+                        }
                     }
                 });
+            }
+            public void fromHandtoDesk() {
+                // moving from hand to cardHolder
+                hand.remove(this);
             }
 
             public void swapCardSize() {
@@ -531,7 +563,7 @@ import javax.swing.JLayeredPane;
                     setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
                     isBig = true;
                 } else {
-                    setIcon(resizeImage(cardBackImagePath, sizeX, sizeY));
+                    setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
                     isBig = false;
                 }
             }
