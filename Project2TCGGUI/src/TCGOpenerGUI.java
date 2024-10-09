@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -64,9 +65,10 @@ import javax.swing.JLayeredPane;
         private JPanel collection;
         private JLayeredPane desk;
         private JPanel cardsDisplayed;
-        private JPanel cardsUnpacking;
+        private JPanel hand;
         private JPanel cardHolder;
         private JLabel boosterPack;
+        private JLabel initialPack;
         private CardLabel boosterCard;
         private GridBagConstraints gbConst;
         private JButton fromWelcometoDesk;
@@ -152,26 +154,26 @@ import javax.swing.JLayeredPane;
         }
 
         private JLayeredPane createDeskPane() {
+            // Add menu to select the reveal method, use Event.getActionCommand() 
+            // method in actionPerformed for menus
             desk = new JLayeredPane();
             desk.setPreferredSize(wideScreen);
 
             deskImagePath = "/backgrounds/Peter_Desk.png";
             TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
-            packImage = new ImageIcon(getClass().getResource(TEMPboosterpackPath)).getImage();
+            //packImage = new ImageIcon(getClass().getResource(TEMPboosterpackPath)).getImage();
 
-            int cardsUnpackingWidth = (wideScreen.width - packsize.width) - 150;
-            int cardsUnpackingHeight = (wideScreen.height - packsize.height) - 200;
-            cardsUnpacking = new JPanel() {
-                @Override
-                public void paintComponent(Graphics graphic) {
-                    super.paintComponent(graphic);
-                    graphic.drawImage(packImage, 0, 0, getWidth(), getHeight(), this);
-                }
-            };
-            cardsUnpacking.setPreferredSize(packsize);
-            cardsUnpacking.setBackground(Color.GRAY);
-            cardsUnpacking.setBounds(cardsUnpackingWidth, cardsUnpackingHeight, packsize.width, packsize.height);
+            int handWidth = (wideScreen.width - packsize.width) - 150;
+            int handHeight = (wideScreen.height - packsize.height) - 200;
+
+            initialPack = new JLabel();
+            hand = new JPanel();
+            unpackCards(hand);
+            hand.setLayout(new BorderLayout());
+            hand.setPreferredSize(packsize);
+            hand.setBackground(Color.GRAY);
+            hand.setBounds(handWidth, handHeight, packsize.width, packsize.height);
 
             cardsDisplayed = new JPanel() {
                 @Override
@@ -222,7 +224,7 @@ import javax.swing.JLayeredPane;
             cardsDisplayed.add(fromDesktoCollection, gbConst);
 
             desk.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
-            desk.add(cardsUnpacking, JLayeredPane.PALETTE_LAYER);
+            desk.add(hand, JLayeredPane.PALETTE_LAYER);
             desk.add(cardHolder, JLayeredPane.MODAL_LAYER);
 
             return desk;
@@ -268,6 +270,14 @@ import javax.swing.JLayeredPane;
             }
             else if (event.getSource() == revealRare) {
                 revealLast = true;
+            }
+        }
+
+        public void unpackCards(JPanel hand) {
+            ArrayList<JLabel> currentPack = assignImagestoPack(buildPack(), revealLast);
+            hand.getLayout();
+            for (int i = currentPack.size(); i > 0; i--) {
+                hand.add(currentPack.get(i - 1), BorderLayout.CENTER);
             }
         }
 
