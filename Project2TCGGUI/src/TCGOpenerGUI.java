@@ -1,6 +1,7 @@
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.FlowLayout;
 //import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,9 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
-import javax.swing.JLayer;
 import javax.swing.JLayeredPane;
-import javax.swing.BoxLayout;
 
 /**
  * - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
@@ -69,7 +68,10 @@ import javax.swing.BoxLayout;
         private JLayeredPane hand;
         private JPanel cardsDisplayed;
         private JPanel cardHolder;
-        private JLabel initialPack;
+        private JPanel collectionButtons;
+        private JPanel binder;
+        private JPanel leftPage;
+        private JPanel rightPage;
         private CardLabel boosterCard;
         private CardLabel boosterPack;
         private GridBagConstraints gbConst;
@@ -79,29 +81,30 @@ import javax.swing.BoxLayout;
         private JButton fromDesktoCollection;
         private JButton revealNormal;
         private JButton revealRare;
-        private JButton startOpening;
         private JButton newPack;
         private JButton currentCollection;
+        private JButton nextPage;
+        private JButton previousPage;
+        private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
         private Dimension packsize = new Dimension(300, 515);
-        private Dimension cardHolderDimension = new Dimension(1200, 900);
-        private Dimension wideScreen = new Dimension(1920, 1080);
+        private Dimension cardHolderDimension = new Dimension(1200, 960);
+        private Dimension wideScreen = new Dimension(1920, 1080); //*** REMEMBER TO SET BACK TO WIDESCREEN ***
+        private Dimension smallScreen = new Dimension(1280, 720);
+        private Image binderImage;
         private Image deskImage;
         private String frameTitle;
         private String deskImagePath;
-        private String TEMPcardFrontPath; // Until the directories are created
-        private String TEMPcardBackPath;  // Until the directories are created
-        private String TEMPboosterpackPath; // Until the directories are created
         private boolean rareLast = false;
         private int handStartX = (wideScreen.width - packsize.width) - 150;
         private int handStartY = (wideScreen.height - packsize.height) - 200;
+        private int sshandStartX = (smallScreen.width - packsize.width) - 150;
+        private int sshandStartY = (smallScreen.height - packsize.height) - 200;
+        private int collectionNextIndex = 0;
+        private int collectionPreviousIndex = 0;
 
         public TCGOpenerGUI() {
 
             createMainPanel();
-
-            gbConst = new GridBagConstraints();
-            startOpening = new JButton("Start Opening");
-            currentCollection = new JButton("Show Current Collection");
             setDefaultCloseOperation(EXIT_ON_CLOSE);
             setVisible(true);
 
@@ -109,24 +112,21 @@ import javax.swing.BoxLayout;
 
         private JPanel createWelcomescreenPanel() {
             welcomescreen = new JPanel(new GridBagLayout());
-            welcomescreen.setPreferredSize(wideScreen);
+            welcomescreen.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
 
             gbConst = new GridBagConstraints();
 
-            fromWelcometoDesk = new JButton("To Desk");
-            fromWelcometoCollection = new JButton("To Collection");
-
+            fromWelcometoDesk = new JButton("Start Opening Packs");
             fromWelcometoDesk.addActionListener(this);
+
+            fromWelcometoCollection = new JButton("Show Current Collection");            
             fromWelcometoCollection.addActionListener(this);
 
-            gbConst.insets = new Insets(10, 10, 10, 10);
+            gbConst.insets = new Insets(5, 5, 5, 5);
             gbConst.gridx = 0;
             gbConst.gridy = 0;
             gbConst.anchor = GridBagConstraints.CENTER;
             gbConst.fill = GridBagConstraints.NONE;
-            gbConst.weightx = 1.0;
-            gbConst.weighty = 1.0;
-
             welcomescreen.add(fromWelcometoDesk, gbConst);
 
             gbConst.gridy = 1;
@@ -137,22 +137,80 @@ import javax.swing.BoxLayout;
 
         private JPanel createCollectionPanel() {
             collection = new JPanel(new GridBagLayout());
-            collection.setPreferredSize(wideScreen);
+            collection.setBounds(0, 0, wideScreen.width, wideScreen.height); // *** BACK TO WIDESCREEN ***
 
-            gbConst = new GridBagConstraints();
+            collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            collectionButtons.setSize(wideScreen.width, 40);
+            collectionButtons.setOpaque(false);
+
+            String binderImagePath = "";
+            binderImage = new ImageIcon(getClass().getResource(binderImagePath)).getImage();
+            binder = new JPanel() { // *** MIGHT NEED TO CHANGE TO JLayeredPane FOR CARDS TO APPEAR OVER BINDER PAGES ***
+                @Override
+                public void paintComponent(Graphics graphic) {
+                    super.paintComponent(graphic);
+                    graphic.drawImage(binderImage, 0, 40, getWidth(), getHeight(), this);
+                }
+            };
+            binder.setLayout(new GridBagLayout());
+            int newheight = ((wideScreen.height) - 40);
+            binder.setSize(wideScreen.width, newheight);
+            binder.setOpaque(true);
+            binder.setBackground(Color.BLUE);
+            binder.setVisible(true);
+
+            int newwidth = ((wideScreen.width) / 2);
+            leftPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 25));
+            leftPage.setSize(newwidth, newheight);
+            leftPage.setOpaque(true);
+            leftPage.setBackground(Color.GREEN);
+            leftPage.setVisible(true);
+
+            rightPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 25));
+            rightPage.setSize(newwidth, newheight);
+            rightPage.setOpaque(true);
+            rightPage.setBackground(Color.ORANGE);
+            rightPage.setVisible(true);
+
+            GridBagConstraints gbConst1 = new GridBagConstraints();
+
+            gbConst1.gridx = 0;
+            gbConst1.gridy = 0;
+            gbConst1.weightx = 0.8;
+            gbConst1.weighty = 0.8;
+            gbConst1.anchor = GridBagConstraints.CENTER;
+            gbConst1.fill = GridBagConstraints.BOTH;
+            gbConst1.insets = new Insets(40, 40, 40, 40);
+            binder.add(leftPage, gbConst1);
+
+            gbConst1.gridx = 1;
+            binder.add(rightPage, gbConst1);
+
+            GridBagConstraints gbConst2 = new GridBagConstraints();
 
             fromCollectiontoDesk = new JButton("To Desk");
             fromCollectiontoDesk.addActionListener(this);
+            nextPage = new JButton("Next Page");
+            nextPage.addActionListener(this);
+            previousPage = new JButton("Previous Page");
+            previousPage.addActionListener(this);
 
-            gbConst.insets = new Insets(10, 10, 10, 10);
-            gbConst.gridx = 0;
-            gbConst.gridy = 0;
-            gbConst.anchor = GridBagConstraints.CENTER;
-            gbConst.fill = GridBagConstraints.NONE;
-            gbConst.weightx = 1.0;
-            gbConst.weighty = 1.0;
+            collectionButtons.add(fromCollectiontoDesk);
+            collectionButtons.add(nextPage);
+            collectionButtons.add(previousPage);
 
-            collection.add(fromCollectiontoDesk, gbConst);
+            gbConst2.gridx = 0;
+            gbConst2.gridy = 0;
+            gbConst2.anchor = GridBagConstraints.NORTH;
+            collection.add(collectionButtons, gbConst2);
+
+            gbConst2.gridy = 1;
+            gbConst2.weightx = 1;
+            gbConst2.weighty = 1;
+            gbConst2.fill = GridBagConstraints.BOTH;
+            collection.add(binder, gbConst2);
+            revalidate();
+            repaint();
 
             return collection;
         }
@@ -161,40 +219,31 @@ import javax.swing.BoxLayout;
             // Add menu to select the reveal method, use Event.getActionCommand() 
             // method in actionPerformed for menus
             desk = new JLayeredPane();
-            desk.setPreferredSize(wideScreen);
+            desk.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
 
-            deskImagePath = "/backgrounds/Peter_Desk.png";
-            TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
+            deskImagePath = "/backgrounds/wood_desk.png";
+            String TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
-
-            hand = new JLayeredPane();
-            hand.setPreferredSize(packsize);
-            //hand.setBackground(Color.BLUE);
-            hand.setOpaque(false);
-            hand.setVisible(true);
-            hand.setBounds(handStartX, handStartY, packsize.width, packsize.height);
 
             cardsDisplayed = new JPanel() {
                 @Override
                 public void paintComponent(Graphics graphic) {
                     super.paintComponent(graphic);
-                    graphic.drawImage(deskImage, 0, 0,getWidth(), getHeight(), this);
+                    graphic.drawImage(deskImage, 0, 0, getWidth(), getHeight(), this);
                 }
             };
-            cardsDisplayed.setPreferredSize(wideScreen);
+            cardsDisplayed.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
             cardsDisplayed.setBackground(Color.GRAY);
-            cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height);
+            cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height); // *** BACK TO WIDESCREEN ***
 
-            cardHolder = new JPanel() {
-                @Override
-                public void paintComponent(Graphics graphic) {
-                    super.paintComponent(graphic);
-                }
-            };
-            gbConst.gridwidth = 4;
-            gbConst.gridheight = 3;
-            cardHolder.setLayout(new GridLayout(3, 4, 5, 5));
-            cardHolder.setPreferredSize(cardHolderDimension);
+            hand = new JLayeredPane();
+            hand.setPreferredSize(packsize);
+            hand.setOpaque(false);
+            hand.setVisible(true);
+            hand.setBounds(handStartX, handStartY, packsize.width, packsize.height); // *** BACK TO handStartX and handStartY ***
+
+            cardHolder = new JPanel();
+            cardHolder.setLayout(new FlowLayout(FlowLayout.LEFT, 40, 25));
             cardHolder.setBackground(null);
             cardHolder.setOpaque(false);
             cardHolder.setBounds(50, 50, cardHolderDimension.width, cardHolderDimension.height);
@@ -205,29 +254,24 @@ import javax.swing.BoxLayout;
             revealNormal.addActionListener(this);
             revealRare = new JButton("Reveal Rare Last");
             revealRare.addActionListener(this);
-
             fromDesktoCollection = new JButton("To Collection");
             fromDesktoCollection.addActionListener(this);
-
-            gbConst.gridx = 0;
-            gbConst.gridy = 0;
-            cardsDisplayed.add(revealNormal, gbConst);
-
-            gbConst.gridx = 1;
-            cardsDisplayed.add(revealRare, gbConst);
-
-            gbConst.gridx = 2;
-            cardsDisplayed.add(newPack, gbConst);
 
             gbConst.insets = new Insets(10, 10, 10, 10);
             gbConst.gridx = 0;
             gbConst.gridy = 0;
             gbConst.anchor = GridBagConstraints.LINE_START;
             gbConst.fill = GridBagConstraints.NONE;
-            gbConst.weightx = 1.0;
-            gbConst.weighty = 1.0;
-
             cardsDisplayed.add(fromDesktoCollection, gbConst);
+
+            gbConst.gridx = 1;
+            cardsDisplayed.add(revealNormal, gbConst);
+
+            gbConst.gridx = 2;
+            cardsDisplayed.add(revealRare, gbConst);
+
+            gbConst.gridx = 3;
+            cardsDisplayed.add(newPack, gbConst);
 
             desk.add(hand, JLayeredPane.PALETTE_LAYER);
             desk.add(cardHolder, JLayeredPane.PALETTE_LAYER);
@@ -240,7 +284,7 @@ import javax.swing.BoxLayout;
 
         private void createMainPanel() {
             root = new JPanel(new CardLayout());
-            root.setPreferredSize(wideScreen);
+            root.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
 
             welcomescreen = createWelcomescreenPanel();
             collection = createCollectionPanel();
@@ -255,10 +299,90 @@ import javax.swing.BoxLayout;
 
             frameTitle = new String("TCG Opener");
             setTitle(frameTitle);
-            setSize(wideScreen);
-            setLocationRelativeTo(null);
+            setSize(wideScreen); // *** BACK TO WIDESCREEN ***
             add(root);
+        }
 
+        public class CardLabel extends JLabel{
+            private String name; // need to name all cards in folders, just add between ")" and ".jpg" or whatever file ext
+            private String type;
+            private String cardFrontImagePath;
+            private final int sizeX = 130;
+            private final int sizeY = 180;
+            private final int bigSizeX = 200;
+            private final int bigSizeY = 250;
+            public boolean isBig = false;
+            
+            // Need to make sure cards are properly sorted in specific folders to be used here
+            public CardLabel(String cardFrontImagePath) {
+                this.type = "card";
+                this.cardFrontImagePath = cardFrontImagePath;
+                ImageIcon resizedImage = new ImageIcon();
+                resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
+                setIcon(resizedImage);
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.isShiftDown()) {
+                            //swapCardSize();
+                        }
+                        else {
+                            fromHandtoDesk();
+                        }
+                    }
+                });
+            }
+
+            public CardLabel(ImageIcon packImage) {
+                this.type = "pack";
+                setIcon(packImage);
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.isShiftDown()) {
+                            //swapCardSize();
+                        }
+                        else {
+                            fromHandtoDesk();
+                        }
+                    }
+                });
+            }
+            public void fromHandtoDesk() {
+                // moving from hand to cardHolder
+                hand.remove(this);
+                hand.revalidate();
+                hand.repaint();
+                if (this.type.equalsIgnoreCase("card")) {
+                    String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
+                    ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
+                    this.setIcon(smallCardIcon);
+                    cardHolder.add(this);
+                    cardCollection.add(this);
+                }
+            }
+
+            public void setType(String type) {
+                this.type = type;
+            }
+
+            public String getType() {
+                return type;
+            }
+
+            public String getImagePath() {
+                return cardFrontImagePath;
+            }
+            // Will be method used to zoom into cards
+            //public void swapCardSize() {
+            //    if (!isBig) {
+            //        setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
+            //        isBig = true;
+            //    } else {
+            //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
+            //        isBig = false;
+            //    }
+            //}
         }
 
         @Override
@@ -270,6 +394,16 @@ import javax.swing.BoxLayout;
             else if (event.getSource() == fromWelcometoCollection || event.getSource() == fromDesktoCollection) {
                 CardLayout layout = (CardLayout) root.getLayout();
                 layout.show(root, "Collection");
+                if (event.getSource() == fromDesktoCollection) {
+                    addToCollection();
+                    leftPage.revalidate();
+                    leftPage.repaint();
+                    rightPage.revalidate();
+                    rightPage.repaint();
+                    cardHolder.removeAll();
+                    cardHolder.revalidate();
+                    cardHolder.repaint();
+                }
             }
             else if (event.getSource() == revealNormal) {
                 if (rareLast == true) {
@@ -282,12 +416,36 @@ import javax.swing.BoxLayout;
                 }
             }
             else if (event.getSource() == newPack) {
+                cardHolder.removeAll();
+                cardHolder.revalidate();
+                cardHolder.repaint();
                 unpackCards(hand);
                 hand.revalidate();
                 hand.repaint();
             }
         }
 
+        public void addToCollection() {
+            for (int i = 0; i < cardCollection.size(); i++) {
+                if (leftPage.getComponentCount() == 1) {
+                    collectionPreviousIndex = i;
+                }
+                if (leftPage.getComponentCount() <= 9) {
+                    cardCollection.get(i).setVisible(true);
+                    leftPage.add(cardCollection.get(i));
+                }
+                else if (rightPage.getComponentCount() <= 9) {
+                    cardCollection.get(i).setVisible(true);
+                    rightPage.add(cardCollection.get(i));
+                }
+                else {
+                    collectionNextIndex = i;
+                    break;
+                }
+            }
+            revalidate();
+            repaint();
+        }
         public void unpackCards(JLayeredPane inputPane) {
             ArrayList<CardLabel> currentPack = assignImagestoPack(buildPack());
             currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height);
@@ -305,21 +463,25 @@ import javax.swing.BoxLayout;
             int common = rng.nextInt(32) + 1;
             return common;
         }
+
         public int randUncommon() {
             Random rng = new Random();
             int uncommon = rng.nextInt(32) + 1;
             return uncommon;
         }
+
         public int randRare() {
             Random rng = new Random();
             int rare = rng.nextInt(16) + 1;
             return rare;
         }
+
         public int randEnergy() {
             Random rng = new Random();
             int energy = rng.nextInt(6) + 1;
             return energy;
         }
+
         public int[] noDupes(int[] cardList) {
             int[] newCardList = new int[cardList.length];
             for (int i = 0; i < cardList.length; i++) {
@@ -330,7 +492,7 @@ import javax.swing.BoxLayout;
                     for (int j = 1; j < newCardList.length; j++) {
                         if (i != j && newCardList[i] == newCardList[j]) {
                             while (newCardList[i] == newCardList[j]) {                            
-                                if (i > 1 && i < 6) {
+                                if (i >= 1 && i < 6) {
                                     newCardList[i] = randCommon();
                                 }
                                 else if (i >= 6 && i < 8) {
@@ -352,16 +514,16 @@ import javax.swing.BoxLayout;
                     for (int j = 1; j < newCardList.length; j++) {
                         if (i != j && newCardList[i] == newCardList[j]) {
                             while (newCardList[i] == newCardList[j]) {                            
-                                if (i > 1 && i < 6) {
+                                if (i >= 1 && i < 6) {
                                     newCardList[i] = randCommon();
                                 }
                                 else if (i >= 6 && i < 8) {
                                     newCardList[i] = randEnergy();
                                 }
-                                else if (i <= 8 && i < 10) {
+                                else if (i <= 8 && i < 11) {
                                     newCardList[i] = randUncommon();
                                 }
-                                else if (i == 12) {
+                                else if (i == 11) {
                                     newCardList[i] = randRare();
                                 }
                             }
@@ -426,7 +588,7 @@ import javax.swing.BoxLayout;
             // Normal card reveal method
             if (!rareLast) {
                 for (int i = 1; i < pack.length; i++) {
-                    if (i > 1 && i < 6) {
+                    if (i >= 1 && i < 6) {
                         String currentCommon = commonPath + pack[i] + ").jpg";
                         boosterCard = new CardLabel(currentCommon);
                         packImages.add(boosterCard);
@@ -460,7 +622,7 @@ import javax.swing.BoxLayout;
             // Reveal rare card last method
             else if (rareLast) {
                 for (int j = 1; j < pack.length; j++) {
-                    if (j > 1 && j < 6) {
+                    if (j >= 1 && j < 6) {
                         String currentCommon = commonPath + pack[j] + ").jpg";
                         boosterCard = new CardLabel(currentCommon);
                         packImages.add(boosterCard);
@@ -535,84 +697,6 @@ import javax.swing.BoxLayout;
             newIcon = new ImageIcon(resizedImage);
 
             return newIcon;
-        }
-
-
-
-        public class CardLabel extends JLabel{
-
-            private String type;
-            private String cardFrontImagePath;
-            private String packImagePath;
-            private final int sizeX = 130;
-            private final int sizeY = 180;
-            private final int bigSizeX = 200;
-            private final int bigSizeY = 250;
-            public boolean isBig = false;
-            
-            // Need to make sure cards are properly sorted in specific folders to be used here
-            public CardLabel(String cardFrontImagePath) {
-                this.type = "card";
-                this.cardFrontImagePath = cardFrontImagePath;
-                ImageIcon resizedImage = new ImageIcon();
-                resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
-                setIcon(resizedImage);
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            //swapCardSize();
-                        }
-                        else {
-                            fromHandtoDesk();
-                        }
-                    }
-                });
-            }
-
-            public CardLabel(ImageIcon packImage) {
-                this.type = "pack";
-                setIcon(packImage);
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            //swapCardSize();
-                        }
-                        else {
-                            fromHandtoDesk();
-                        }
-                    }
-                });
-            }
-            public void fromHandtoDesk() {
-                // moving from hand to cardHolder
-                hand.remove(this);
-                hand.revalidate();
-                hand.repaint();
-            }
-
-            public void setType(String type) {
-                this.type = type;
-            }
-
-            public String getType() {
-                return type;
-            }
-
-            public String getImagePath() {
-                return cardFrontImagePath;
-            }
-            // Will be method used to zoom into cards
-            //public void swapCardSize() {
-            //    if (!isBig) {
-            //        setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
-            //        isBig = true;
-            //    } else {
-            //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-            //        isBig = false;
-            //    }
-            //}
         }
         public static void main(String[] args) {
             new TCGOpenerGUI();
