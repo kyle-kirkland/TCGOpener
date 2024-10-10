@@ -10,7 +10,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
-import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -23,7 +22,9 @@ import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.JLayer;
 import javax.swing.JLayeredPane;
+import javax.swing.BoxLayout;
 
 /**
  * - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
@@ -65,12 +66,12 @@ import javax.swing.JLayeredPane;
         private JPanel welcomescreen;
         private JPanel collection;
         private JLayeredPane desk;
+        private JLayeredPane hand;
         private JPanel cardsDisplayed;
-        private JPanel hand;
         private JPanel cardHolder;
         private JLabel initialPack;
         private CardLabel boosterCard;
-        private PackLabel boosterPack;
+        private CardLabel boosterPack;
         private GridBagConstraints gbConst;
         private JButton fromWelcometoDesk;
         private JButton fromWelcometoCollection;
@@ -81,7 +82,7 @@ import javax.swing.JLayeredPane;
         private JButton startOpening;
         private JButton newPack;
         private JButton currentCollection;
-        private Dimension packsize = new Dimension(300, 500);
+        private Dimension packsize = new Dimension(300, 515);
         private Dimension cardHolderDimension = new Dimension(1200, 900);
         private Dimension wideScreen = new Dimension(1920, 1080);
         private Image deskImage;
@@ -90,7 +91,9 @@ import javax.swing.JLayeredPane;
         private String TEMPcardFrontPath; // Until the directories are created
         private String TEMPcardBackPath;  // Until the directories are created
         private String TEMPboosterpackPath; // Until the directories are created
-        private boolean revealLast;
+        private boolean rareLast = false;
+        private int handStartX = (wideScreen.width - packsize.width) - 150;
+        private int handStartY = (wideScreen.height - packsize.height) - 200;
 
         public TCGOpenerGUI() {
 
@@ -163,19 +166,13 @@ import javax.swing.JLayeredPane;
             deskImagePath = "/backgrounds/Peter_Desk.png";
             TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
-            //packImage = new ImageIcon(getClass().getResource(TEMPboosterpackPath)).getImage();
 
-            int handWidth = (wideScreen.width - packsize.width) - 150;
-            int handHeight = (wideScreen.height - packsize.height) - 200;
-
-            initialPack = new JLabel();
-            hand = new JPanel();
-            hand.setLayout(new BorderLayout());
+            hand = new JLayeredPane();
             hand.setPreferredSize(packsize);
-            hand.setBackground(null);
+            //hand.setBackground(Color.BLUE);
             hand.setOpaque(false);
-            hand.setBounds(handWidth, handHeight, packsize.width, packsize.height);
-            unpackCards(hand);
+            hand.setVisible(true);
+            hand.setBounds(handStartX, handStartY, packsize.width, packsize.height);
 
             cardsDisplayed = new JPanel() {
                 @Override
@@ -188,7 +185,12 @@ import javax.swing.JLayeredPane;
             cardsDisplayed.setBackground(Color.GRAY);
             cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
-            cardHolder = new JPanel();
+            cardHolder = new JPanel() {
+                @Override
+                public void paintComponent(Graphics graphic) {
+                    super.paintComponent(graphic);
+                }
+            };
             gbConst.gridwidth = 4;
             gbConst.gridheight = 3;
             cardHolder.setLayout(new GridLayout(3, 4, 5, 5));
@@ -227,9 +229,11 @@ import javax.swing.JLayeredPane;
 
             cardsDisplayed.add(fromDesktoCollection, gbConst);
 
-            desk.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
             desk.add(hand, JLayeredPane.PALETTE_LAYER);
-            desk.add(cardHolder, JLayeredPane.MODAL_LAYER);
+            desk.add(cardHolder, JLayeredPane.PALETTE_LAYER);
+            desk.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
+            desk.revalidate();
+            desk.repaint();
 
             return desk;
         }
@@ -268,21 +272,31 @@ import javax.swing.JLayeredPane;
                 layout.show(root, "Collection");
             }
             else if (event.getSource() == revealNormal) {
-                revealLast = false;
+                if (rareLast == true) {
+                    rareLast = false;
+                }
             }
             else if (event.getSource() == revealRare) {
-                revealLast = true;
+                if (rareLast == false) {
+                    rareLast = true;
+                }
             }
             else if (event.getSource() == newPack) {
                 unpackCards(hand);
+                hand.revalidate();
+                hand.repaint();
             }
         }
 
-        public void unpackCards(JPanel hand) {
-            ArrayList<JLabel> currentPack = assignImagestoPack(buildPack(), revealLast);
-            hand.getLayout();
-            for (int i = currentPack.size(); i > 0; i--) {
-                hand.add(currentPack.get(i - 1), BorderLayout.CENTER);
+        public void unpackCards(JLayeredPane inputPane) {
+            ArrayList<CardLabel> currentPack = assignImagestoPack(buildPack());
+            currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height);
+            currentPack.get(0).setVisible(true);
+            inputPane.add(currentPack.get(0));
+            for (int i = 1; i < (currentPack.size()); i++) {
+                currentPack.get(i).setBounds(0, 51, packsize.width, 413);
+                currentPack.get(i).setVisible(true);
+                inputPane.add(currentPack.get(i));
             }
         }
 
@@ -311,22 +325,45 @@ import javax.swing.JLayeredPane;
             for (int i = 0; i < cardList.length; i++) {
                 newCardList[i] = cardList[i];
             }
-
-            for (int i = 0; i < newCardList.length; i++) {
-                for (int j = 0; j < newCardList.length; j++) {
-                    if (i != j && newCardList[i] == newCardList[j]) {
-                        while (newCardList[i] == newCardList[j]) {                            
-                            if (i < 5) {
-                                newCardList[i] = randCommon();
+            if (!rareLast) {
+                for (int i = 1; i < newCardList.length; i++) {
+                    for (int j = 1; j < newCardList.length; j++) {
+                        if (i != j && newCardList[i] == newCardList[j]) {
+                            while (newCardList[i] == newCardList[j]) {                            
+                                if (i > 1 && i < 6) {
+                                    newCardList[i] = randCommon();
+                                }
+                                else if (i >= 6 && i < 8) {
+                                    newCardList[i] = randEnergy();
+                                }
+                                else if (i == 8) {
+                                    newCardList[i] = randRare();
+                                }
+                                else if (i >= 9 && i < 12) {
+                                    newCardList[i] = randUncommon();
+                                }
                             }
-                            else if (i >= 5 || i < 7) {
-                                newCardList[i] = randEnergy();
-                            }
-                            else if (i >= 8) {
-                                newCardList[i] = randRare();
-                            }
-                            else if (i >= 9 || i < 12) {
-                                newCardList[i] = randUncommon();
+                        }
+                    }
+                }
+            }
+            else if (rareLast) {
+                for (int i = 1; i < newCardList.length; i++) {
+                    for (int j = 1; j < newCardList.length; j++) {
+                        if (i != j && newCardList[i] == newCardList[j]) {
+                            while (newCardList[i] == newCardList[j]) {                            
+                                if (i > 1 && i < 6) {
+                                    newCardList[i] = randCommon();
+                                }
+                                else if (i >= 6 && i < 8) {
+                                    newCardList[i] = randEnergy();
+                                }
+                                else if (i <= 8 && i < 10) {
+                                    newCardList[i] = randUncommon();
+                                }
+                                else if (i == 12) {
+                                    newCardList[i] = randRare();
+                                }
                             }
                         }
                     }
@@ -343,7 +380,7 @@ import javax.swing.JLayeredPane;
             */
 
             int[] pack = new int[12];
-            if (!revealLast) {
+            if (!rareLast) {
                 pack[0] = 0;
                 pack[1] = randCommon();
                 pack[2] = randCommon();
@@ -357,7 +394,7 @@ import javax.swing.JLayeredPane;
                 pack[10] = randUncommon();
                 pack[11] = randUncommon();
             }
-            else {
+            else if (rareLast) {
                 pack[0] = 0;
                 pack[1] = randCommon();
                 pack[2] = randCommon();
@@ -377,31 +414,29 @@ import javax.swing.JLayeredPane;
 
             return newPack;
         }
-        // Might change this to ArrayList of JLabels and add the ImageIcons within method
-        public ArrayList<JLabel> assignImagestoPack(int[] pack, boolean revealMethod) {
-            ArrayList<JLabel> packImages = new ArrayList<JLabel>();
+        public ArrayList<CardLabel> assignImagestoPack(int[] pack) {
+            ArrayList <CardLabel> packImages = new ArrayList<CardLabel>();
             String commonPath = "/cardImages/largeCards/common/common(";
             String energyPath = "/cardImages/largeCards/energy/energy(";
             String rarePath = "/cardImages/largeCards/rare/rare(";
             String holoPath = "/cardImages/largeCards/holo/holo(";
             String uncommonPath = "/cardImages/largeCards/uncommon/uncommon(";
-            boolean rareLast = revealMethod;
-            boosterPack = new PackLabel();
+            boosterPack = new CardLabel(randomPack());
 
             // Normal card reveal method
             if (!rareLast) {
-                for (int i = 0; i < pack.length; i++) {
-                    if (i < 5) {
+                for (int i = 1; i < pack.length; i++) {
+                    if (i > 1 && i < 6) {
                         String currentCommon = commonPath + pack[i] + ").jpg";
                         boosterCard = new CardLabel(currentCommon);
                         packImages.add(boosterCard);
                     }
-                    else if (i >= 5 && i < 7) {
+                    else if (i >= 6 && i < 8) {
                         String currentEnergy = energyPath + pack[i] + ").jpg";
                         boosterCard = new CardLabel(currentEnergy);
                         packImages.add(boosterCard);
                     }
-                    else if (i == 7) {
+                    else if (i == 8) {
                         Random rng = new Random();
                         if (rng.nextInt(4) == 3) {
                             String currentHolo = holoPath + pack[i] + ").jpg";
@@ -414,7 +449,7 @@ import javax.swing.JLayeredPane;
                             packImages.add(boosterCard);
                         }
                     }
-                    else if (i >= 9 && i <= 10) {
+                    else if (i >= 9 && i <= 11) {
                         String currentUncommon = uncommonPath + pack[i] + ").jpg";
                         boosterCard = new CardLabel(currentUncommon);
                         packImages.add(boosterCard);
@@ -423,24 +458,24 @@ import javax.swing.JLayeredPane;
                 
             }
             // Reveal rare card last method
-            if (rareLast) {
-                for (int j = 0; j < pack.length; j++) {
-                    if (j < 5) {
+            else if (rareLast) {
+                for (int j = 1; j < pack.length; j++) {
+                    if (j > 1 && j < 6) {
                         String currentCommon = commonPath + pack[j] + ").jpg";
                         boosterCard = new CardLabel(currentCommon);
                         packImages.add(boosterCard);
                     }
-                    else if (j >= 5 && j < 7) {
+                    else if (j >= 6 && j < 8) {
                         String currentEnergy = energyPath + pack[j] + ").jpg";
                         boosterCard = new CardLabel(currentEnergy);
                         packImages.add(boosterCard);
                     }
-                    else if (j >= 7 && j < 10) {
+                    else if (j >= 8 && j < 11) {
                         String currentUncommon = uncommonPath + pack[j] + ").jpg";
                         boosterCard = new CardLabel(currentUncommon);
                         packImages.add(boosterCard);
                     }
-                    else if ( j == 10) {
+                    else if ( j == 11) {
                         Random rng = new Random();
                         if (rng.nextInt(4) == 3) {
                             String currentHolo = holoPath + pack[j] + ").jpg";
@@ -455,79 +490,60 @@ import javax.swing.JLayeredPane;
                     }
                 }
             }
-
+            
             packImages.add(0, boosterPack);
             return packImages;
         }
+        private ImageIcon randomPack() {
+            String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
+            String charizardPackPath = "/card_packs/charizard_pack.jpg";
+            String blastoisePackPath = "/card_packs/blastoise_pack.jpg";
+            ImageIcon randomPackImage = new ImageIcon();
+            ImageIcon venusaurPack = new ImageIcon(getClass().getResource(venusaurPackPath));
+            ImageIcon charizardPack = new ImageIcon(getClass().getResource(charizardPackPath));
+            ImageIcon blastoisePack = new ImageIcon(getClass().getResource(blastoisePackPath));
+            Random rng2 = new Random();
+            
+            int num = rng2.nextInt(2);
+            if (num == 0) {
+                ImageIcon newVenusaurPack = resizePackImage(venusaurPack);
+                randomPackImage = newVenusaurPack;
+            }
+            else if (num == 1) {
+                ImageIcon newCharizardPack = resizePackImage(charizardPack);
+                randomPackImage = newCharizardPack;
+            }
+            else if (num == 2) {
+                ImageIcon newBlastoisePack = resizePackImage(blastoisePack);
+                randomPackImage = newBlastoisePack;
+            };
+            return randomPackImage;
+        }
         // Rewrite to change size of card, using an additional JPanel or resizing the JLabel? Idk yet
-        public static ImageIcon resizeImage(String imgPath, int width, int height) {
-            ImageIcon icon = new ImageIcon(imgPath);
-            Image image = icon.getImage();
-            Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        public ImageIcon resizePackImage(ImageIcon currentIcon) {
+            ImageIcon newIcon;
+            Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
+            newIcon = new ImageIcon(resizedImage);
 
-            return new ImageIcon(resizedImage);
+            return newIcon;
         }
 
-        public class PackLabel extends JLabel{
-            ImageIcon randomPackImage = randomPack();
-            public String type = "pack";
-            public boolean isBig = false;
+        public ImageIcon resizeCardImage(ImageIcon currentIcon) {
+            ImageIcon newIcon;
+            Dimension cardsize = new Dimension(300, 413);
+            Image resizedImage = currentIcon.getImage().getScaledInstance(cardsize.width, cardsize.height, Image.SCALE_SMOOTH);
+            newIcon = new ImageIcon(resizedImage);
 
-            public PackLabel() {
-
-                setIcon(randomPackImage);
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            swapCardSize();
-                        }
-                        else {
-                            removePack();
-                        }
-                    }
-                });
-            }
-            public void removePack() {
-                hand.remove(this);
-            }
-            private ImageIcon randomPack() {
-                String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
-                String charizardPackPath = "/card_packs/charizard_pack.jpg";
-                String blastoisePackPath = "/card_packs/blastoise_pack.jpg";
-                ImageIcon randomPackImage = new ImageIcon();
-                ImageIcon venusaurPack = new ImageIcon(getClass().getResource(venusaurPackPath));
-                ImageIcon charizardPack = new ImageIcon(getClass().getResource(charizardPackPath));
-                ImageIcon blastoisePack = new ImageIcon(getClass().getResource(blastoisePackPath));
-                Random rng2 = new Random();
-                int num = rng2.nextInt(2);
-                if (num == 0) {
-                    randomPackImage = venusaurPack;
-                }
-                else if (num == 1) {
-                    randomPackImage = charizardPack;
-                }
-                else if (num == 2) {
-                    randomPackImage = blastoisePack;
-                }
-                return randomPackImage;
-            }
-            // Need to rewrite this method, no longer using Images need to resize ImageIcons
-            public void swapCardSize() {
-                //if (!isBig) {
-                //    setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
-                //    isBig = true;
-                //} else {
-                //    setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-                //    isBig = false;
-                //}
-            }
+            return newIcon;
         }
+
+
 
         public class CardLabel extends JLabel{
 
-            //private String cardBackImagePath; Not sure if needed
+            private String type;
             private String cardFrontImagePath;
+            private String packImagePath;
             private final int sizeX = 130;
             private final int sizeY = 180;
             private final int bigSizeX = 200;
@@ -536,16 +552,32 @@ import javax.swing.JLayeredPane;
             
             // Need to make sure cards are properly sorted in specific folders to be used here
             public CardLabel(String cardFrontImagePath) {
-                // String cardBackImagePath = "/cardBacks/cardBack.png"; Not sure if needed
-                // setIcon(resizeImage(this.cardBackImagePath, sizeX, sizeY)); Not sure if needed
-                setIcon(new ImageIcon(getClass().getResource(cardFrontImagePath))); // *****WHERE I LEFT OFF saying the location is null, need to specify location 
-
-
+                this.type = "card";
+                this.cardFrontImagePath = cardFrontImagePath;
+                ImageIcon resizedImage = new ImageIcon();
+                resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
+                setIcon(resizedImage);
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
                         if (event.isShiftDown()) {
-                            swapCardSize();
+                            //swapCardSize();
+                        }
+                        else {
+                            fromHandtoDesk();
+                        }
+                    }
+                });
+            }
+
+            public CardLabel(ImageIcon packImage) {
+                this.type = "pack";
+                setIcon(packImage);
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.isShiftDown()) {
+                            //swapCardSize();
                         }
                         else {
                             fromHandtoDesk();
@@ -556,17 +588,31 @@ import javax.swing.JLayeredPane;
             public void fromHandtoDesk() {
                 // moving from hand to cardHolder
                 hand.remove(this);
+                hand.revalidate();
+                hand.repaint();
             }
 
-            public void swapCardSize() {
-                if (!isBig) {
-                    setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
-                    isBig = true;
-                } else {
-                    setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-                    isBig = false;
-                }
+            public void setType(String type) {
+                this.type = type;
             }
+
+            public String getType() {
+                return type;
+            }
+
+            public String getImagePath() {
+                return cardFrontImagePath;
+            }
+            // Will be method used to zoom into cards
+            //public void swapCardSize() {
+            //    if (!isBig) {
+            //        setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
+            //        isBig = true;
+            //    } else {
+            //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
+            //        isBig = false;
+            //    }
+            //}
         }
         public static void main(String[] args) {
             new TCGOpenerGUI();
