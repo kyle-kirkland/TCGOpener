@@ -87,7 +87,7 @@ import javax.swing.JLayeredPane;
         private JButton previousPage;
         private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
         private Dimension packsize = new Dimension(300, 515);
-        private Dimension cardHolderDimension = new Dimension(1200, 960);
+        private Dimension cardHolderDimension = new Dimension(1200, 1000);
         private Dimension wideScreen = new Dimension(1920, 1080); //*** REMEMBER TO SET BACK TO WIDESCREEN ***
         private Dimension smallScreen = new Dimension(1280, 720);
         private Image binderImage;
@@ -243,10 +243,10 @@ import javax.swing.JLayeredPane;
             hand.setBounds(handStartX, handStartY, packsize.width, packsize.height); // *** BACK TO handStartX and handStartY ***
 
             cardHolder = new JPanel();
-            cardHolder.setLayout(new FlowLayout(FlowLayout.LEFT, 40, 25));
+            cardHolder.setLayout(new FlowLayout(FlowLayout.LEFT, 40, 15));
             cardHolder.setBackground(null);
             cardHolder.setOpaque(false);
-            cardHolder.setBounds(50, 50, cardHolderDimension.width, cardHolderDimension.height);
+            cardHolder.setBounds(25, 25, cardHolderDimension.width, cardHolderDimension.height);
 
             newPack = new JButton("Open New Pack");
             newPack.addActionListener(this);
