@@ -24,6 +24,8 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 /**
  * - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
@@ -88,10 +90,11 @@ import javax.swing.JLayeredPane;
         private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
         private Dimension packsize = new Dimension(300, 515);
         private Dimension cardHolderDimension = new Dimension(1200, 1000);
-        private Dimension wideScreen = new Dimension(1920, 1080); //*** REMEMBER TO SET BACK TO WIDESCREEN ***
+        private Dimension wideScreen = new Dimension(1920, 1080);
         private Dimension smallScreen = new Dimension(1280, 720);
         private Image binderImage;
         private Image deskImage;
+        private SwingUtilities SU;
         private String frameTitle;
         private String deskImagePath;
         private boolean rareLast = false;
@@ -112,15 +115,15 @@ import javax.swing.JLayeredPane;
 
         private JPanel createWelcomescreenPanel() {
             welcomescreen = new JPanel(new GridBagLayout());
-            welcomescreen.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
+            welcomescreen.setPreferredSize(wideScreen); 
 
             gbConst = new GridBagConstraints();
 
             fromWelcometoDesk = new JButton("Start Opening Packs");
-            fromWelcometoDesk.addActionListener(this);
+            fromWelcometoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
 
             fromWelcometoCollection = new JButton("Show Current Collection");            
-            fromWelcometoCollection.addActionListener(this);
+            fromWelcometoCollection.addActionListener(event -> switchPanel("Collection"));  // *** LAMBDA ***
 
             gbConst.insets = new Insets(5, 5, 5, 5);
             gbConst.gridx = 0;
@@ -137,7 +140,7 @@ import javax.swing.JLayeredPane;
 
         private JPanel createCollectionPanel() {
             collection = new JPanel(new GridBagLayout());
-            collection.setBounds(0, 0, wideScreen.width, wideScreen.height); // *** BACK TO WIDESCREEN ***
+            collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
             collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             collectionButtons.setSize(wideScreen.width, 40);
@@ -189,7 +192,7 @@ import javax.swing.JLayeredPane;
             GridBagConstraints gbConst2 = new GridBagConstraints();
 
             fromCollectiontoDesk = new JButton("To Desk");
-            fromCollectiontoDesk.addActionListener(this);
+            fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
             nextPage = new JButton("Next Page");
             nextPage.addActionListener(this);
             previousPage = new JButton("Previous Page");
@@ -219,7 +222,7 @@ import javax.swing.JLayeredPane;
             // Add menu to select the reveal method, use Event.getActionCommand() 
             // method in actionPerformed for menus
             desk = new JLayeredPane();
-            desk.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
+            desk.setPreferredSize(wideScreen); 
 
             deskImagePath = "/backgrounds/wood_desk.png";
             String TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
@@ -232,15 +235,15 @@ import javax.swing.JLayeredPane;
                     graphic.drawImage(deskImage, 0, 0, getWidth(), getHeight(), this);
                 }
             };
-            cardsDisplayed.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
+            cardsDisplayed.setPreferredSize(wideScreen);
             cardsDisplayed.setBackground(Color.GRAY);
-            cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height); // *** BACK TO WIDESCREEN ***
+            cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height); 
 
             hand = new JLayeredPane();
             hand.setPreferredSize(packsize);
             hand.setOpaque(false);
             hand.setVisible(true);
-            hand.setBounds(handStartX, handStartY, packsize.width, packsize.height); // *** BACK TO handStartX and handStartY ***
+            hand.setBounds(handStartX, handStartY, packsize.width, packsize.height); 
 
             cardHolder = new JPanel();
             cardHolder.setLayout(new FlowLayout(FlowLayout.LEFT, 40, 15));
@@ -249,13 +252,13 @@ import javax.swing.JLayeredPane;
             cardHolder.setBounds(25, 25, cardHolderDimension.width, cardHolderDimension.height);
 
             newPack = new JButton("Open New Pack");
-            newPack.addActionListener(this);
+            newPack.addActionListener(event -> openNewPack(hand)); // *** LAMBDA w/ SwingWorker IMPLEMENTATION ***
             revealNormal = new JButton("Reveal Normal Order");
-            revealNormal.addActionListener(this);
+            revealNormal.addActionListener(event -> revealCards(false)); // *** LAMBDA ***
             revealRare = new JButton("Reveal Rare Last");
-            revealRare.addActionListener(this);
+            revealRare.addActionListener(event -> revealCards(true)); // *** LAMBDA ***
             fromDesktoCollection = new JButton("To Collection");
-            fromDesktoCollection.addActionListener(this);
+            fromDesktoCollection.addActionListener(event -> switchPanel("Collection")); // *** LAMBDA ***
 
             gbConst.insets = new Insets(10, 10, 10, 10);
             gbConst.gridx = 0;
@@ -284,7 +287,7 @@ import javax.swing.JLayeredPane;
 
         private void createMainPanel() {
             root = new JPanel(new CardLayout());
-            root.setPreferredSize(wideScreen); // *** BACK TO WIDESCREEN ***
+            root.setPreferredSize(wideScreen); 
 
             welcomescreen = createWelcomescreenPanel();
             collection = createCollectionPanel();
@@ -299,10 +302,10 @@ import javax.swing.JLayeredPane;
 
             frameTitle = new String("TCG Opener");
             setTitle(frameTitle);
-            setSize(wideScreen); // *** BACK TO WIDESCREEN ***
+            setSize(wideScreen); 
             add(root);
         }
-
+        /** CardLabel class that is used to create each card and pack */
         public class CardLabel extends JLabel{
             private String name; // need to name all cards in folders, just add between ")" and ".jpg" or whatever file ext
             private String type;
@@ -327,7 +330,7 @@ import javax.swing.JLayeredPane;
                             //swapCardSize();
                         }
                         else {
-                            fromHandtoDesk();
+                        //fromHandtoDesk();
                         }
                     }
                 });
@@ -385,44 +388,52 @@ import javax.swing.JLayeredPane;
             //}
         }
 
+        /** ActionListener for buttons that can't use a lambda expression */
         @Override
         public void actionPerformed(ActionEvent event) {
-            if (event.getSource() == fromWelcometoDesk || event.getSource() == fromCollectiontoDesk) {
-                CardLayout layout = (CardLayout) root.getLayout();
-                layout.show(root, "Desk");
-            }
-            else if (event.getSource() == fromWelcometoCollection || event.getSource() == fromDesktoCollection) {
-                CardLayout layout = (CardLayout) root.getLayout();
-                layout.show(root, "Collection");
-                if (event.getSource() == fromDesktoCollection) {
-                    addToCollection();
-                    leftPage.revalidate();
-                    leftPage.repaint();
-                    rightPage.revalidate();
-                    rightPage.repaint();
-                    cardHolder.removeAll();
-                    cardHolder.revalidate();
-                    cardHolder.repaint();
+            // This may remain empty, we'll see
+        }
+
+        /** Methods for lambda expressions */
+        private void switchPanel(String panelName) {
+            CardLayout layout = (CardLayout) root.getLayout();
+            layout.show(root, panelName);
+        }
+
+        public void revealCards(boolean lastOrNot) {
+            rareLast = lastOrNot;
+        }
+
+        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+            SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
+                @Override
+                protected ArrayList<CardLabel> doInBackground() throws Exception {
+                    return packCards();
                 }
-            }
-            else if (event.getSource() == revealNormal) {
-                if (rareLast == true) {
-                    rareLast = false;
+
+                @Override
+                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                    try {
+                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
+
+                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                        currentPack.get(0).setVisible(true);
+                        inputPane.add(currentPack.get(0));
+                        for (int i = 1; i < (currentPack.size()); i++) {
+                            currentPack.get(i).setBounds(0, 51, packsize.width, 413);
+                            currentPack.get(i).setVisible(true);
+                            inputPane.add(currentPack.get(i));
+                        }
+                        cardHolder.removeAll();
+                        cardHolder.revalidate();
+                        cardHolder.repaint();
+                        hand.revalidate();
+                        hand.repaint();
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
                 }
-            }
-            else if (event.getSource() == revealRare) {
-                if (rareLast == false) {
-                    rareLast = true;
-                }
-            }
-            else if (event.getSource() == newPack) {
-                cardHolder.removeAll();
-                cardHolder.revalidate();
-                cardHolder.repaint();
-                unpackCards(hand);
-                hand.revalidate();
-                hand.repaint();
-            }
+            };
         }
 
         public void addToCollection() {
@@ -446,16 +457,10 @@ import javax.swing.JLayeredPane;
             revalidate();
             repaint();
         }
-        public void unpackCards(JLayeredPane inputPane) {
-            ArrayList<CardLabel> currentPack = assignImagestoPack(buildPack());
-            currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height);
-            currentPack.get(0).setVisible(true);
-            inputPane.add(currentPack.get(0));
-            for (int i = 1; i < (currentPack.size()); i++) {
-                currentPack.get(i).setBounds(0, 51, packsize.width, 413);
-                currentPack.get(i).setVisible(true);
-                inputPane.add(currentPack.get(i));
-            }
+
+        public ArrayList<CardLabel> packCards() {
+            ArrayList<CardLabel> currentPack = new ArrayList<CardLabel>(assignImagestoPack(buildPack()));
+            return currentPack;
         }
 
         public int randCommon() {
@@ -699,6 +704,6 @@ import javax.swing.JLayeredPane;
             return newIcon;
         }
         public static void main(String[] args) {
-            new TCGOpenerGUI();
+            SwingUtilities.invokeLater(() ->new TCGOpenerGUI());
         }
     }
