@@ -326,12 +326,10 @@ import javax.swing.SwingWorker;
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            //swapCardSize();
-                        }
-                        else {
-                        //fromHandtoDesk();
-                        }
+                        //if (event.isShiftDown()) {
+                        //    swapCardSize();
+                        //}
+                        fromHandtoDesk();
                     }
                 });
             }
@@ -342,27 +340,58 @@ import javax.swing.SwingWorker;
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            //swapCardSize();
-                        }
-                        else {
-                            fromHandtoDesk();
-                        }
+                        //if (event.isShiftDown()) {
+                        //    swapCardSize();
+                        //}
+                        fromHandtoDesk();
                     }
                 });
             }
             public void fromHandtoDesk() {
                 // moving from hand to cardHolder
-                hand.remove(this);
-                hand.revalidate();
-                hand.repaint();
-                if (this.type.equalsIgnoreCase("card")) {
-                    String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
-                    ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
-                    this.setIcon(smallCardIcon);
-                    cardHolder.add(this);
-                    cardCollection.add(this);
+                if (this.type.equalsIgnoreCase("pack")) {
+                    hand.remove(this);
+                    hand.revalidate();
+                    hand.repaint();
                 }
+
+                else if (this.type.equalsIgnoreCase("card")) { // *** SECOND USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+                    hand.remove(this);
+                    hand.revalidate();
+                    hand.repaint();
+                    SwingWorker<Void, Void> bgThread = new SwingWorker<>() { 
+                        @Override
+                        protected Void doInBackground() throws Exception {
+                            shrinkCard();
+                            addToCollection();
+                            return null;
+                        }
+                        @Override
+                        protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                            try {
+                                get(); // *** RETRIEVES ANYTHING DONE IN THE BACKGROUND, INCLUDING ERRORS TO BE PRINTED ***
+                                addToCardHolder(); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                            } catch (Exception exception) {
+                                exception.printStackTrace();
+                            }
+                        }
+                    };
+                    bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
+                }
+            }
+
+            public void addToCardHolder() {
+                cardHolder.add(this);
+                cardHolder.revalidate();
+                cardHolder.repaint();
+            }
+            public void addToCollection() {
+                cardCollection.add(this);
+            }
+            public void shrinkCard() {
+                String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
+                ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
+                this.setIcon(smallCardIcon);
             }
 
             public void setType(String type) {
@@ -434,6 +463,7 @@ import javax.swing.SwingWorker;
                     }
                 }
             };
+            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
         }
 
         public void addToCollection() {
