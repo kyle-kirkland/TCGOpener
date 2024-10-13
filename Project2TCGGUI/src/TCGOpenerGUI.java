@@ -11,6 +11,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Scanner;
+import java.util.regex.*;
+import java.io.*;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -95,6 +98,14 @@ import javax.swing.SwingWorker;
         private Image binderImage;
         private Image deskImage;
         private SwingUtilities SU;
+        private Pattern pattern;
+        private Matcher matcher;
+        private File file;
+        private String[] commonCardNames;
+        private String[] energyCardNames;
+        private String[] uncommonCardNames;
+        private String[] rareCardNames;
+        private String[] holoCardNames;
         private String frameTitle;
         private String deskImagePath;
         private boolean rareLast = false;
@@ -309,12 +320,9 @@ import javax.swing.SwingWorker;
         public class CardLabel extends JLabel{
             private String name; // need to name all cards in folders, just add between ")" and ".jpg" or whatever file ext
             private String type;
+            private String rarity;
             private String cardFrontImagePath;
-            private final int sizeX = 130;
-            private final int sizeY = 180;
-            private final int bigSizeX = 200;
-            private final int bigSizeY = 250;
-            public boolean isBig = false;
+            private boolean isBig = false;
             
             // Need to make sure cards are properly sorted in specific folders to be used here
             public CardLabel(String cardFrontImagePath) {
@@ -402,9 +410,26 @@ import javax.swing.SwingWorker;
                 return type;
             }
 
+            public void setName(String name) {
+                this.name = name;
+            }
+            
+            public String getName() {
+                return this.name;
+            }
+
+            public void setRarity(String rarity) {
+                this.rarity = rarity;
+            }
+
+            public String getRarity() {
+                return rarity;
+            }
+
             public String getImagePath() {
                 return cardFrontImagePath;
             }
+
             // Will be method used to zoom into cards
             //public void swapCardSize() {
             //    if (!isBig) {
@@ -431,39 +456,6 @@ import javax.swing.SwingWorker;
 
         public void revealCards(boolean lastOrNot) {
             rareLast = lastOrNot;
-        }
-
-        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
-            SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
-                @Override
-                protected ArrayList<CardLabel> doInBackground() throws Exception {
-                    return packCards();
-                }
-
-                @Override
-                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
-                    try {
-                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
-
-                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
-                        currentPack.get(0).setVisible(true);
-                        inputPane.add(currentPack.get(0));
-                        for (int i = 1; i < (currentPack.size()); i++) {
-                            currentPack.get(i).setBounds(0, 51, packsize.width, 413);
-                            currentPack.get(i).setVisible(true);
-                            inputPane.add(currentPack.get(i));
-                        }
-                        cardHolder.removeAll();
-                        cardHolder.revalidate();
-                        cardHolder.repaint();
-                        hand.revalidate();
-                        hand.repaint();
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                    }
-                }
-            };
-            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
         }
 
         public void addToCollection() {
@@ -611,86 +603,50 @@ import javax.swing.SwingWorker;
 
             return newPack;
         }
-        public ArrayList<CardLabel> assignImagestoPack(int[] pack) {
-            ArrayList <CardLabel> packImages = new ArrayList<CardLabel>();
-            String commonPath = "/cardImages/largeCards/common/common(";
-            String energyPath = "/cardImages/largeCards/energy/energy(";
-            String rarePath = "/cardImages/largeCards/rare/rare(";
-            String holoPath = "/cardImages/largeCards/holo/holo(";
-            String uncommonPath = "/cardImages/largeCards/uncommon/uncommon(";
-            boosterPack = new CardLabel(randomPack());
 
-            // Normal card reveal method
-            if (!rareLast) {
-                for (int i = 1; i < pack.length; i++) {
-                    if (i >= 1 && i < 6) {
-                        String currentCommon = commonPath + pack[i] + ").jpg";
-                        boosterCard = new CardLabel(currentCommon);
-                        packImages.add(boosterCard);
-                    }
-                    else if (i >= 6 && i < 8) {
-                        String currentEnergy = energyPath + pack[i] + ").jpg";
-                        boosterCard = new CardLabel(currentEnergy);
-                        packImages.add(boosterCard);
-                    }
-                    else if (i == 8) {
-                        Random rng = new Random();
-                        if (rng.nextInt(4) == 3) {
-                            String currentHolo = holoPath + pack[i] + ").jpg";
-                            boosterCard = new CardLabel(currentHolo);
-                            packImages.add(boosterCard);
-                        }
-                        else {
-                            String currentRare = rarePath + pack[i] + ").jpg";
-                            boosterCard = new CardLabel(currentRare); 
-                            packImages.add(boosterCard);
-                        }
-                    }
-                    else if (i >= 9 && i <= 11) {
-                        String currentUncommon = uncommonPath + pack[i] + ").jpg";
-                        boosterCard = new CardLabel(currentUncommon);
-                        packImages.add(boosterCard);
-                    }
-                }
-                
-            }
-            // Reveal rare card last method
-            else if (rareLast) {
-                for (int j = 1; j < pack.length; j++) {
-                    if (j >= 1 && j < 6) {
-                        String currentCommon = commonPath + pack[j] + ").jpg";
-                        boosterCard = new CardLabel(currentCommon);
-                        packImages.add(boosterCard);
-                    }
-                    else if (j >= 6 && j < 8) {
-                        String currentEnergy = energyPath + pack[j] + ").jpg";
-                        boosterCard = new CardLabel(currentEnergy);
-                        packImages.add(boosterCard);
-                    }
-                    else if (j >= 8 && j < 11) {
-                        String currentUncommon = uncommonPath + pack[j] + ").jpg";
-                        boosterCard = new CardLabel(currentUncommon);
-                        packImages.add(boosterCard);
-                    }
-                    else if ( j == 11) {
-                        Random rng = new Random();
-                        if (rng.nextInt(4) == 3) {
-                            String currentHolo = holoPath + pack[j] + ").jpg";
-                            boosterCard = new CardLabel(currentHolo);
-                            packImages.add(boosterCard);
-                        }
-                        else {
-                            String currentRare = rarePath + pack[j] + ").jpg";
-                            boosterCard = new CardLabel(currentRare);
-                            packImages.add(boosterCard);   
-                        }
-                    }
-                }
-            }
-            
-            packImages.add(0, boosterPack);
-            return packImages;
+        public String[][] setAllCardNames() {
+            String[][] allCardNames = new String[5][];
+            String[] commonNames = {"'FILLER'", "'Abra'", "'Bulbasaur'", "'Caterpie'", "'Charmander'", "'Diglett'", "'Doduo'", "'Drowzee'", "'Gastly'", "'Koffing'", "'Machop'", "'Magnemite'", 
+            "'Metapod'", "'Nidoran_M'", "'Onix'", "'Pidgey'", "'Pikachu'", "'Poliwag'", "'Ponyta'", "'Rattata'", "'Sandshrew'", "'Squirtle'", "'Starmie'", "'Staryu'", "'Tangela'", 
+            "'Voltorb'", "'Vulpix'", "'Weedle'", "'Trainer_Bill'", "'Trainer_Energy_Removal'", "'Trainer_Gust_of_Wind'", "'Trainer_Potion'", "'Trainer_Switch'"};
+            String[] energyNames = {"'FILLER'", "'Energy_Fighting'", "'Energy_Fire'", "'Energy_Grass'", "'Energy_Lightning'", "'Energy_Psychic'", "'Energy_Water'"};
+            String[] uncommonNames = {"'FILLER'", "'Arcanine'", "'Charmeleon'", "'Dewgong'", "'Dratini'", "'Farfetchd'", "'Growlithe'", "'Haunter'", "'Ivysaur'", "'Jynx'", "'Kadabra'", "'Kakuna'", 
+            "'Machoke'", "'Majikarp'", "'Magmar'", "'Nidorino'", "'Poliwhirl'", "'Porygon'", "'Raticate'", "'Seel'", "'Wartortle'", "'Trainer_Defender'", "'Trainer_Energy_Retrieval'", 
+            "'Trainer_Full_Heal'", "'Trainer_Maintenance'", "'Trainer_PlusPower'", "'Trainer_Pokemon_Center'", "'Trainer_Pokemon_Flute'", "'Trainer_Pokedex'", "'Trainer_Professor_Oak'", 
+            "'Trainer_Revive'", "'Trainer_Super_Potion'", "'Energy_Double_Colorless'"};
+            String[] rareNames = {"'FILLER'", "'Beedril'", "'Dragonair'", "'Dugtrio'", "'Electabuzz'", "'Electrode'", "'Pidgeotto'", "'Trainer_Clefairy_Doll'", "'Trainer_Computer_Search'", 
+            "'Trainer_Devolution_Spray'", "'Trainer_Imposter_Professor_Oak'", "'Trainer_Item_Finder'", "'Trainer_Lass'", "'Trainer_Pokemon_Breeder'", "'Trainer_Pokemon_Trader'", 
+            "'Trainer_Scoop_Up'", "'Trainer_Super_Energy_Removal'"};
+            String[] holoNames = {"'FILLER'", "'Alakazam'", "'Blastoise'", "'Chansey'", "'Charizard'", "'Clefairy'", "'Gyarados'", "'Hitmonchan'", "'Machamp'", "'Magneton'", "'Mewtwo'", "'Nidoking'", 
+            "'Ninetales'", "'Poliwrath'", "'Raichu'", "'Venusaur'", "'Zapdos'", };
+
+            allCardNames[0] = commonNames;
+            allCardNames[1] = energyNames;
+            allCardNames[2] = uncommonNames;
+            allCardNames[3] = rareNames;
+            allCardNames[4] = holoNames;
+
+            return allCardNames;
         }
+
+        // Rewrite to change size of card, using an additional JPanel or resizing the JLabel? Idk yet
+        public ImageIcon resizePackImage(ImageIcon currentIcon) {
+            ImageIcon newIcon;
+            Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
+            newIcon = new ImageIcon(resizedImage);
+
+            return newIcon;
+        }
+
+        public ImageIcon resizeCardImage(ImageIcon currentIcon) {
+            ImageIcon newIcon;
+            Dimension cardsize = new Dimension(300, 413);
+            Image resizedImage = currentIcon.getImage().getScaledInstance(cardsize.width, cardsize.height, Image.SCALE_SMOOTH);
+            newIcon = new ImageIcon(resizedImage);
+
+            return newIcon;
+        }
+
         private ImageIcon randomPack() {
             String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
             String charizardPackPath = "/card_packs/charizard_pack.jpg";
@@ -716,24 +672,150 @@ import javax.swing.SwingWorker;
             };
             return randomPackImage;
         }
-        // Rewrite to change size of card, using an additional JPanel or resizing the JLabel? Idk yet
-        public ImageIcon resizePackImage(ImageIcon currentIcon) {
-            ImageIcon newIcon;
-            Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
-            newIcon = new ImageIcon(resizedImage);
 
-            return newIcon;
+        public String fixCardName(String cardName) {
+            String name = "";
+            name = cardName.replaceAll("_", " ");
+            name = name.replaceAll("'", "");
+            return name;
         }
 
-        public ImageIcon resizeCardImage(ImageIcon currentIcon) {
-            ImageIcon newIcon;
-            Dimension cardsize = new Dimension(300, 413);
-            Image resizedImage = currentIcon.getImage().getScaledInstance(cardsize.width, cardsize.height, Image.SCALE_SMOOTH);
-            newIcon = new ImageIcon(resizedImage);
+        public ArrayList<CardLabel> assignImagestoPack(int[] pack) {
+            ArrayList <CardLabel> packImages = new ArrayList<CardLabel>();
+            String[][] allCardNames = setAllCardNames();
+            String commonPath = "/cardImages/largeCards/common/";       // allCardNames[0] = commonNames;
+            String energyPath = "/cardImages/largeCards/energy/";       // allCardNames[1] = energyNames;
+            String rarePath = "/cardImages/largeCards/rare/";           // allCardNames[3] = rareNames;
+            String holoPath = "/cardImages/largeCards/holo/";           // allCardNames[4] = holoNames;
+            String uncommonPath = "/cardImages/largeCards/uncommon/";   // allCardNames[2] = uncommonNames;
+            boosterPack = new CardLabel(randomPack());
 
-            return newIcon;
+            // Normal card reveal method
+            if (!rareLast) {
+                for (int i = 1; i < pack.length; i++) {
+                    if (i >= 1 && i < 6) {
+                        String currentCommon = commonPath + allCardNames[0][pack[i]] + "common(" + pack[i] + ").jpg";
+                        boosterCard = new CardLabel(currentCommon);
+                        boosterCard.setName(fixCardName(allCardNames[0][pack[i]]));
+                        boosterCard.setRarity("Common");
+                        packImages.add(boosterCard);
+                    }
+                    else if (i >= 6 && i < 8) {
+                        String currentEnergy = energyPath + allCardNames[1][pack[i]] + "energy(" + pack[i] + ").jpg";
+                        boosterCard = new CardLabel(currentEnergy);
+                        boosterCard.setName(fixCardName(allCardNames[1][pack[i]]));
+                        boosterCard.setRarity("Common");
+                        packImages.add(boosterCard);
+                    }
+                    else if (i == 8) {
+                        Random rng = new Random();
+                        if (rng.nextInt(4) == 3) {
+                            String currentHolo = holoPath + allCardNames[4][pack[i]] + "holo(" + pack[i] + ").jpg";
+                            boosterCard = new CardLabel(currentHolo);
+                            boosterCard.setName(fixCardName(allCardNames[4][pack[i]]));
+                            boosterCard.setRarity("Holo Rare");
+                            packImages.add(boosterCard);
+                        }
+                        else {
+                            String currentRare = rarePath + allCardNames[3][pack[i]] + "rare(" + pack[i] + ").jpg";
+                            boosterCard = new CardLabel(currentRare);
+                            boosterCard.setName(fixCardName(allCardNames[3][pack[i]]));
+                            boosterCard.setRarity("Rare");
+                            packImages.add(boosterCard);
+                        }
+                    }
+                    else if (i >= 9 && i <= 11) {
+                        String currentUncommon = uncommonPath + allCardNames[2][pack[i]] + "uncommon(" + pack[i] + ").jpg";
+                        boosterCard = new CardLabel(currentUncommon);
+                        boosterCard.setName(fixCardName(allCardNames[2][pack[i]]));
+                        boosterCard.setRarity("Uncommon");
+                        packImages.add(boosterCard);
+                    }
+                }
+                
+            }
+            // Reveal rare card last method
+            else if (rareLast) {
+                for (int j = 1; j < pack.length; j++) {
+                    if (j >= 1 && j < 6) {
+                        String currentCommon = commonPath + allCardNames[0][pack[j]] + "common(" + pack[j] + ").jpg";
+                        boosterCard = new CardLabel(currentCommon);
+                        boosterCard.setName(fixCardName(allCardNames[0][pack[j]]));
+                        boosterCard.setRarity("Common");
+                        packImages.add(boosterCard);
+                    }
+                    else if (j >= 6 && j < 8) {
+                        String currentEnergy = energyPath + allCardNames[1][pack[j]] + "energy(" + pack[j] + ").jpg";
+                        boosterCard = new CardLabel(currentEnergy);
+                        boosterCard.setName(fixCardName(allCardNames[1][pack[j]]));
+                        boosterCard.setRarity("Common");
+                        packImages.add(boosterCard);
+                    }
+                    else if (j >= 8 && j < 11) {
+                        String currentUncommon = uncommonPath + allCardNames[2][pack[j]] + "uncommon(" + pack[j] + ").jpg";
+                        boosterCard = new CardLabel(currentUncommon);
+                        boosterCard.setName(fixCardName(allCardNames[2][pack[j]]));
+                        boosterCard.setRarity("Uncommon");
+                        packImages.add(boosterCard);
+                    }
+                    else if ( j == 11) {
+                        Random rng = new Random();
+                        if (rng.nextInt(4) == 3) {
+                            String currentHolo = holoPath + allCardNames[4][pack[j]] + "holo(" + pack[j] + ").jpg";
+                            boosterCard = new CardLabel(currentHolo);
+                            boosterCard.setName(fixCardName(allCardNames[4][pack[j]]));
+                            boosterCard.setRarity("Holo Rare");
+                            packImages.add(boosterCard);
+                        }
+                        else {
+                            String currentRare = rarePath + allCardNames[3][pack[j]] + "rare(" +  pack[j] + ").jpg";
+                            boosterCard = new CardLabel(currentRare);
+                            boosterCard.setName(fixCardName(allCardNames[3][pack[j]]));
+                            boosterCard.setRarity("Rare");
+                            packImages.add(boosterCard);   
+                        }
+                    }
+                }
+            }
+            
+            packImages.add(0, boosterPack);
+            return packImages;
         }
+
+        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+            SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
+                @Override
+                protected ArrayList<CardLabel> doInBackground() throws Exception {
+                    return packCards();
+                }
+
+                @Override
+                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                    try {
+                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
+
+                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                        currentPack.get(0).setVisible(true);
+                        inputPane.add(currentPack.get(0));
+                        for (int i = 1; i < (currentPack.size()); i++) {
+                            currentPack.get(i).setBounds(0, 51, packsize.width, 413);
+                            currentPack.get(i).setVisible(true);
+                            inputPane.add(currentPack.get(i));
+                        }
+                        cardHolder.removeAll();
+                        cardHolder.revalidate();
+                        cardHolder.repaint();
+                        hand.revalidate();
+                        hand.repaint();
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                }
+            };
+            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
+        }
+
         public static void main(String[] args) {
-            SwingUtilities.invokeLater(() ->new TCGOpenerGUI());
+            SwingUtilities.invokeLater(() -> new TCGOpenerGUI());
         }
     }
