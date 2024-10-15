@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.Flow;
 import java.util.regex.*;
 import java.io.*;
 import java.awt.CardLayout;
@@ -87,7 +88,7 @@ import javax.swing.SwingWorker;
         private JButton revealNormal;
         private JButton revealRare;
         private JButton newPack;
-        private JButton currentCollection;
+        private JButton openBinder;
         private JButton nextPage;
         private JButton previousPage;
         private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
@@ -113,8 +114,9 @@ import javax.swing.SwingWorker;
         private int handStartY = (wideScreen.height - packsize.height) - 200;
         private int sshandStartX = (smallScreen.width - packsize.width) - 150;
         private int sshandStartY = (smallScreen.height - packsize.height) - 200;
-        private int collectionNextIndex = 0;
-        private int collectionPreviousIndex = 0;
+        private int nextIndex = 0;
+        private int previousIndex = 0;
+        private int currIndex = 0;
 
         public TCGOpenerGUI() {
 
@@ -174,14 +176,19 @@ import javax.swing.SwingWorker;
             binder.setVisible(true);
 
             int newwidth = ((wideScreen.width) / 2);
-            leftPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 25));
-            leftPage.setSize(newwidth, newheight);
+            Dimension pageMaxSize = new Dimension(newwidth, newheight);
+            //leftPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
+            leftPage = new JPanel(new GridBagLayout());
+            //leftPage.setPreferredSize(pageMaxSize);
+            leftPage.setSize(pageMaxSize);
             leftPage.setOpaque(true);
             leftPage.setBackground(Color.GREEN);
             leftPage.setVisible(true);
 
-            rightPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 25));
-            rightPage.setSize(newwidth, newheight);
+            //rightPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
+            rightPage = new JPanel(new GridBagLayout());
+            //rightPage.setPreferredSize(pageMaxSize);
+            rightPage.setSize(pageMaxSize);
             rightPage.setOpaque(true);
             rightPage.setBackground(Color.ORANGE);
             rightPage.setVisible(true);
@@ -190,11 +197,11 @@ import javax.swing.SwingWorker;
 
             gbConst1.gridx = 0;
             gbConst1.gridy = 0;
-            gbConst1.weightx = 0.8;
-            gbConst1.weighty = 0.8;
-            gbConst1.anchor = GridBagConstraints.CENTER;
-            gbConst1.fill = GridBagConstraints.BOTH;
-            gbConst1.insets = new Insets(40, 40, 40, 40);
+            gbConst1.weightx = 1;
+            gbConst1.weighty = 1;
+            //gbConst1.anchor = GridBagConstraints.CENTER;
+            gbConst1.fill = GridBagConstraints.NONE;
+            gbConst1.insets = new Insets(20, 20, 20, 20);
             binder.add(leftPage, gbConst1);
 
             gbConst1.gridx = 1;
@@ -204,12 +211,15 @@ import javax.swing.SwingWorker;
 
             fromCollectiontoDesk = new JButton("To Desk");
             fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
+            openBinder = new JButton("Open Binder");
+            openBinder.addActionListener(event -> showCardsInBinder());
             nextPage = new JButton("Next Page");
             nextPage.addActionListener(this);
             previousPage = new JButton("Previous Page");
             previousPage.addActionListener(this);
 
             collectionButtons.add(fromCollectiontoDesk);
+            collectionButtons.add(openBinder);
             collectionButtons.add(nextPage);
             collectionButtons.add(previousPage);
 
@@ -318,7 +328,7 @@ import javax.swing.SwingWorker;
         }
         /** CardLabel class that is used to create each card and pack */
         public class CardLabel extends JLabel{
-            private String name; // need to name all cards in folders, just add between ")" and ".jpg" or whatever file ext
+            private String name; 
             private String type;
             private String rarity;
             private String cardFrontImagePath;
@@ -328,6 +338,7 @@ import javax.swing.SwingWorker;
             public CardLabel(String cardFrontImagePath) {
                 this.type = "card";
                 this.cardFrontImagePath = cardFrontImagePath;
+                System.out.println(cardFrontImagePath); // *** DEBUG ***
                 ImageIcon resizedImage = new ImageIcon();
                 resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
                 setIcon(resizedImage);
@@ -363,7 +374,7 @@ import javax.swing.SwingWorker;
                     hand.repaint();
                 }
 
-                else if (this.type.equalsIgnoreCase("card")) { // *** SECOND USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+                else if (this.type.equalsIgnoreCase("card") && hand.isAncestorOf(this)) { // *** SECOND USE OF SwingWorker HAD AI HELP HERE BUT I UNDERSTAND A LITTLE BETTER NOW***
                     hand.remove(this);
                     hand.revalidate();
                     hand.repaint();
@@ -398,6 +409,7 @@ import javax.swing.SwingWorker;
             }
             public void shrinkCard() {
                 String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
+                System.out.println(smallCardImagePath); // *** DEBUG ***
                 ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
                 this.setIcon(smallCardIcon);
             }
@@ -426,7 +438,7 @@ import javax.swing.SwingWorker;
                 return rarity;
             }
 
-            public String getImagePath() {
+            public String getImagePath() { // *** MIGHT NOT NEED ***
                 return cardFrontImagePath;
             }
 
@@ -458,26 +470,63 @@ import javax.swing.SwingWorker;
             rareLast = lastOrNot;
         }
 
-        public void addToCollection() {
-            for (int i = 0; i < cardCollection.size(); i++) {
-                if (leftPage.getComponentCount() == 1) {
-                    collectionPreviousIndex = i;
-                }
-                if (leftPage.getComponentCount() <= 9) {
-                    cardCollection.get(i).setVisible(true);
-                    leftPage.add(cardCollection.get(i));
-                }
-                else if (rightPage.getComponentCount() <= 9) {
-                    cardCollection.get(i).setVisible(true);
-                    rightPage.add(cardCollection.get(i));
-                }
-                else {
-                    collectionNextIndex = i;
-                    break;
+        public void navigateBinder() {
+            
+        }
+        public void addCardsLeftPage(CardLabel currCard) {
+            leftPage.add(currCard);
+            leftPage.revalidate();
+            leftPage.repaint();
+        }
+        public void addCardsRightPage(CardLabel currCard) {
+            rightPage.add(currCard);
+            rightPage.revalidate();
+            rightPage.repaint();
+        }
+        public void showCardsInBinder() {
+            // nextIndex = 0;
+            // previousIndex = 0;
+            // currentIndex = 0;
+
+            if (leftPage.getComponentCount() == 1) {
+                if (currIndex == 0 && previousIndex == 0 && nextIndex == 0) {
+                    nextIndex += 18;
+                };
+            }
+            GridBagConstraints gbConst3 = new GridBagConstraints();
+            //while (leftPage.getComponentCount() < 9) {
+            for (int i = 0; i < 3; i++) {
+                gbConst3.gridy = i;
+                for (int j = 0; j < 3; j++) {
+                    if (currIndex >= cardCollection.size()) {
+                        break;
+                    }
+                    gbConst3.gridx = j;
+                    gbConst3.anchor = GridBagConstraints.CENTER;
+                    gbConst3.fill = GridBagConstraints.NONE;
+                    cardCollection.get(currIndex).setVisible(true);
+                    leftPage.add(cardCollection.get(currIndex), gbConst3);
+                    //addCardsLeftPage(cardCollection.get(currIndex));
+                    currIndex++;
                 }
             }
-            revalidate();
-            repaint();
+            GridBagConstraints gbConst4 = new GridBagConstraints();
+            //while (rightPage.getComponentCount() < 9) {
+            for (int i = 0; i < 3; i++) {
+                gbConst4.gridy = i;
+                for (int j = 0; j < 3; j++) {
+                    if (currIndex >= cardCollection.size()) {
+                        break;
+                    }
+                    gbConst4.gridx = j;
+                    gbConst4.anchor = GridBagConstraints.CENTER;
+                    gbConst4.fill = GridBagConstraints.NONE;
+                    cardCollection.get(currIndex).setVisible(true);
+                    rightPage.add(cardCollection.get(currIndex), gbConst4);
+                    //addCardsRightPage(cardCollection.get(currIndex));
+                    currIndex++;
+                }
+            }
         }
 
         public ArrayList<CardLabel> packCards() {
