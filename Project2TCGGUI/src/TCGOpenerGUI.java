@@ -2,6 +2,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 //import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -69,15 +70,14 @@ import javax.swing.SwingWorker;
     public class TCGOpenerGUI extends JFrame implements ActionListener {
         private JPanel root;
         private JPanel welcomescreen;
-        private JPanel collection;
-        private JLayeredPane desk;
+        private JLayeredPane collection;
+        private JLayeredPane desk1;
+        private JPanel desk2;
         private JLayeredPane hand;
         private JPanel cardsDisplayed;
         private JPanel cardHolder;
         private JPanel collectionButtons;
-        private JPanel binder;
-        private JPanel leftPage;
-        private JPanel rightPage;
+        private JPanel displayArea;
         private CardLabel boosterCard;
         private CardLabel boosterPack;
         private GridBagConstraints gbConst;
@@ -96,7 +96,6 @@ import javax.swing.SwingWorker;
         private Dimension cardHolderDimension = new Dimension(1200, 1000);
         private Dimension wideScreen = new Dimension(1920, 1080);
         private Dimension smallScreen = new Dimension(1280, 720);
-        private Image binderImage;
         private Image deskImage;
         private SwingUtilities SU;
         private Pattern pattern;
@@ -151,63 +150,38 @@ import javax.swing.SwingWorker;
             return welcomescreen;
         }
 
-        private JPanel createCollectionPanel() {
-            collection = new JPanel(new GridBagLayout());
+        private JLayeredPane createCollectionPanel() {
+            collection = new JLayeredPane();
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
-            collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            collectionButtons.setSize(wideScreen.width, 40);
-            collectionButtons.setOpaque(false);
-
-            String binderImagePath = "";
-            binderImage = new ImageIcon(getClass().getResource(binderImagePath)).getImage();
-            binder = new JPanel() { // *** MIGHT NEED TO CHANGE TO JLayeredPane FOR CARDS TO APPEAR OVER BINDER PAGES ***
+            String deskImagePath = "/backgrounds/wood_desk.png";
+            deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
+            desk2 = new JPanel() { // *** MIGHT NEED TO CHANGE TO JLayeredPane FOR CARDS TO APPEAR OVER BINDER PAGES ***
                 @Override
                 public void paintComponent(Graphics graphic) {
                     super.paintComponent(graphic);
-                    graphic.drawImage(binderImage, 0, 40, getWidth(), getHeight(), this);
+                    graphic.drawImage(deskImage, 0, 0, getWidth(), getHeight(), this);
                 }
             };
-            binder.setLayout(new GridBagLayout());
-            int newheight = ((wideScreen.height) - 40);
-            binder.setSize(wideScreen.width, newheight);
-            binder.setOpaque(true);
-            binder.setBackground(Color.BLUE);
-            binder.setVisible(true);
+            desk2.setLayout(new BorderLayout());
+            desk2.setBounds(0, 0, wideScreen.width, wideScreen.height);
+            desk2.setOpaque(true);
+            desk2.setVisible(true);
 
-            int newwidth = ((wideScreen.width) / 2);
-            Dimension pageMaxSize = new Dimension(newwidth, newheight);
-            //leftPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
-            leftPage = new JPanel(new GridBagLayout());
-            //leftPage.setPreferredSize(pageMaxSize);
-            leftPage.setSize(pageMaxSize);
-            leftPage.setOpaque(true);
-            leftPage.setBackground(Color.GREEN);
-            leftPage.setVisible(true);
-
-            //rightPage = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
-            rightPage = new JPanel(new GridBagLayout());
-            //rightPage.setPreferredSize(pageMaxSize);
-            rightPage.setSize(pageMaxSize);
-            rightPage.setOpaque(true);
-            rightPage.setBackground(Color.ORANGE);
-            rightPage.setVisible(true);
+            Dimension pageMaxSize = new Dimension((wideScreen.width - 50), (wideScreen.height - 50));
+            displayArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
+            displayArea.setSize(pageMaxSize);
+            displayArea.setOpaque(false);
+            displayArea.setVisible(true);
 
             GridBagConstraints gbConst1 = new GridBagConstraints();
-
-            gbConst1.gridx = 0;
-            gbConst1.gridy = 0;
-            gbConst1.weightx = 1;
-            gbConst1.weighty = 1;
             //gbConst1.anchor = GridBagConstraints.CENTER;
-            gbConst1.fill = GridBagConstraints.NONE;
-            gbConst1.insets = new Insets(20, 20, 20, 20);
-            binder.add(leftPage, gbConst1);
+            //gbConst1.fill = GridBagConstraints.NONE;
 
-            gbConst1.gridx = 1;
-            binder.add(rightPage, gbConst1);
-
-            GridBagConstraints gbConst2 = new GridBagConstraints();
+            collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            collectionButtons.setBounds((wideScreen.width / 2), 0, 0, 0);
+            collectionButtons.setOpaque(false);
+            collectionButtons.setVisible(false);
 
             fromCollectiontoDesk = new JButton("To Desk");
             fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
@@ -223,16 +197,11 @@ import javax.swing.SwingWorker;
             collectionButtons.add(nextPage);
             collectionButtons.add(previousPage);
 
-            gbConst2.gridx = 0;
-            gbConst2.gridy = 0;
-            gbConst2.anchor = GridBagConstraints.NORTH;
-            collection.add(collectionButtons, gbConst2);
+            GridBagConstraints gbConst2 = new GridBagConstraints();
+            //gbConst2.anchor = GridBagConstraints.NORTH;
+            desk2.add(collectionButtons, BorderLayout.NORTH);
 
-            gbConst2.gridy = 1;
-            gbConst2.weightx = 1;
-            gbConst2.weighty = 1;
-            gbConst2.fill = GridBagConstraints.BOTH;
-            collection.add(binder, gbConst2);
+            collection.add(desk2, JLayeredPane.DEFAULT_LAYER);
             revalidate();
             repaint();
 
@@ -242,8 +211,8 @@ import javax.swing.SwingWorker;
         private JLayeredPane createDeskPane() {
             // Add menu to select the reveal method, use Event.getActionCommand() 
             // method in actionPerformed for menus
-            desk = new JLayeredPane();
-            desk.setPreferredSize(wideScreen); 
+            desk1 = new JLayeredPane();
+            desk1.setPreferredSize(wideScreen); 
 
             deskImagePath = "/backgrounds/wood_desk.png";
             String TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
@@ -297,13 +266,13 @@ import javax.swing.SwingWorker;
             gbConst.gridx = 3;
             cardsDisplayed.add(newPack, gbConst);
 
-            desk.add(hand, JLayeredPane.PALETTE_LAYER);
-            desk.add(cardHolder, JLayeredPane.PALETTE_LAYER);
-            desk.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
-            desk.revalidate();
-            desk.repaint();
+            desk1.add(hand, JLayeredPane.PALETTE_LAYER);
+            desk1.add(cardHolder, JLayeredPane.PALETTE_LAYER);
+            desk1.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
+            desk1.revalidate();
+            desk1.repaint();
 
-            return desk;
+            return desk1;
         }
 
         private void createMainPanel() {
@@ -312,11 +281,11 @@ import javax.swing.SwingWorker;
 
             welcomescreen = createWelcomescreenPanel();
             collection = createCollectionPanel();
-            desk = createDeskPane();
+            desk1 = createDeskPane();
 
             root.add(welcomescreen, "WelcomeScreen");
             root.add(collection, "Collection");
-            root.add(desk, "Desk");
+            root.add(desk1, "Desk");
             
             CardLayout layout = (CardLayout) root.getLayout();
             layout.show(root, "WelcomeScreen");
@@ -473,59 +442,21 @@ import javax.swing.SwingWorker;
         public void navigateBinder() {
             
         }
-        public void addCardsLeftPage(CardLabel currCard) {
-            leftPage.add(currCard);
-            leftPage.revalidate();
-            leftPage.repaint();
+        public void addCardstoDisplayArea(CardLabel currCard) {
+            displayArea.add(currCard);
+            displayArea.revalidate();
+            displayArea.repaint();
         }
-        public void addCardsRightPage(CardLabel currCard) {
-            rightPage.add(currCard);
-            rightPage.revalidate();
-            rightPage.repaint();
-        }
+
         public void showCardsInBinder() {
             // nextIndex = 0;
             // previousIndex = 0;
             // currentIndex = 0;
 
-            if (leftPage.getComponentCount() == 1) {
+            if (displayArea.getComponentCount() == 1) {
                 if (currIndex == 0 && previousIndex == 0 && nextIndex == 0) {
                     nextIndex += 18;
                 };
-            }
-            GridBagConstraints gbConst3 = new GridBagConstraints();
-            //while (leftPage.getComponentCount() < 9) {
-            for (int i = 0; i < 3; i++) {
-                gbConst3.gridy = i;
-                for (int j = 0; j < 3; j++) {
-                    if (currIndex >= cardCollection.size()) {
-                        break;
-                    }
-                    gbConst3.gridx = j;
-                    gbConst3.anchor = GridBagConstraints.CENTER;
-                    gbConst3.fill = GridBagConstraints.NONE;
-                    cardCollection.get(currIndex).setVisible(true);
-                    leftPage.add(cardCollection.get(currIndex), gbConst3);
-                    //addCardsLeftPage(cardCollection.get(currIndex));
-                    currIndex++;
-                }
-            }
-            GridBagConstraints gbConst4 = new GridBagConstraints();
-            //while (rightPage.getComponentCount() < 9) {
-            for (int i = 0; i < 3; i++) {
-                gbConst4.gridy = i;
-                for (int j = 0; j < 3; j++) {
-                    if (currIndex >= cardCollection.size()) {
-                        break;
-                    }
-                    gbConst4.gridx = j;
-                    gbConst4.anchor = GridBagConstraints.CENTER;
-                    gbConst4.fill = GridBagConstraints.NONE;
-                    cardCollection.get(currIndex).setVisible(true);
-                    rightPage.add(cardCollection.get(currIndex), gbConst4);
-                    //addCardsRightPage(cardCollection.get(currIndex));
-                    currIndex++;
-                }
             }
         }
 
@@ -663,7 +594,7 @@ import javax.swing.SwingWorker;
             "'Machoke'", "'Majikarp'", "'Magmar'", "'Nidorino'", "'Poliwhirl'", "'Porygon'", "'Raticate'", "'Seel'", "'Wartortle'", "'Trainer_Defender'", "'Trainer_Energy_Retrieval'", 
             "'Trainer_Full_Heal'", "'Trainer_Maintenance'", "'Trainer_PlusPower'", "'Trainer_Pokemon_Center'", "'Trainer_Pokemon_Flute'", "'Trainer_Pokedex'", "'Trainer_Professor_Oak'", 
             "'Trainer_Revive'", "'Trainer_Super_Potion'", "'Energy_Double_Colorless'"};
-            String[] rareNames = {"'FILLER'", "'Beedril'", "'Dragonair'", "'Dugtrio'", "'Electabuzz'", "'Electrode'", "'Pidgeotto'", "'Trainer_Clefairy_Doll'", "'Trainer_Computer_Search'", 
+            String[] rareNames = {"'FILLER'", "'Beedrill'", "'Dragonair'", "'Dugtrio'", "'Electabuzz'", "'Electrode'", "'Pidgeotto'", "'Trainer_Clefairy_Doll'", "'Trainer_Computer_Search'", 
             "'Trainer_Devolution_Spray'", "'Trainer_Imposter_Professor_Oak'", "'Trainer_Item_Finder'", "'Trainer_Lass'", "'Trainer_Pokemon_Breeder'", "'Trainer_Pokemon_Trader'", 
             "'Trainer_Scoop_Up'", "'Trainer_Super_Energy_Removal'"};
             String[] holoNames = {"'FILLER'", "'Alakazam'", "'Blastoise'", "'Chansey'", "'Charizard'", "'Clefairy'", "'Gyarados'", "'Hitmonchan'", "'Machamp'", "'Magneton'", "'Mewtwo'", "'Nidoking'", 
