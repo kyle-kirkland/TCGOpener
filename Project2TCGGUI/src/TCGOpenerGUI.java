@@ -168,10 +168,11 @@ import javax.swing.SwingWorker;
             desk2.setOpaque(true);
             desk2.setVisible(true);
 
-            Dimension pageMaxSize = new Dimension((wideScreen.width - 50), (wideScreen.height - 50));
+            Dimension pageMaxSize = new Dimension((wideScreen.width - 100), (wideScreen.height - 100));
             displayArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
-            displayArea.setSize(pageMaxSize);
-            displayArea.setOpaque(false);
+            displayArea.setBounds(50, 50, pageMaxSize.width, pageMaxSize.height);
+            displayArea.setBackground(Color.BLUE);
+            displayArea.setOpaque(true);
             displayArea.setVisible(true);
 
             GridBagConstraints gbConst1 = new GridBagConstraints();
@@ -180,8 +181,8 @@ import javax.swing.SwingWorker;
 
             collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             collectionButtons.setBounds((wideScreen.width / 2), 0, 0, 0);
-            collectionButtons.setOpaque(false);
-            collectionButtons.setVisible(false);
+            collectionButtons.setOpaque(true);
+            collectionButtons.setVisible(true);
 
             fromCollectiontoDesk = new JButton("To Desk");
             fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
@@ -201,6 +202,7 @@ import javax.swing.SwingWorker;
             //gbConst2.anchor = GridBagConstraints.NORTH;
             desk2.add(collectionButtons, BorderLayout.NORTH);
 
+            collection.add(displayArea, JLayeredPane.PALETTE_LAYER);
             collection.add(desk2, JLayeredPane.DEFAULT_LAYER);
             revalidate();
             repaint();
