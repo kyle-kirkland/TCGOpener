@@ -168,9 +168,9 @@ import javax.swing.SwingWorker;
             desk2.setOpaque(true);
             desk2.setVisible(true);
 
-            Dimension pageMaxSize = new Dimension((wideScreen.width - 100), (wideScreen.height - 100));
+            Dimension pageMaxSize = new Dimension((wideScreen.width - 50), (wideScreen.height - 50));
             displayArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
-            displayArea.setBounds(50, 50, pageMaxSize.width, pageMaxSize.height);
+            displayArea.setBounds(25, 25, pageMaxSize.width, pageMaxSize.height);
             displayArea.setBackground(Color.BLUE);
             displayArea.setOpaque(true);
             displayArea.setVisible(true);
@@ -181,7 +181,7 @@ import javax.swing.SwingWorker;
 
             collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             collectionButtons.setBounds((wideScreen.width / 2), 0, 0, 0);
-            collectionButtons.setOpaque(true);
+            collectionButtons.setOpaque(false);
             collectionButtons.setVisible(true);
 
             fromCollectiontoDesk = new JButton("To Desk");
