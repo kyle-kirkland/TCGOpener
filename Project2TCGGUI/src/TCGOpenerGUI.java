@@ -1,6 +1,5 @@
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 //import java.awt.event.*;
@@ -13,7 +12,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.Flow;
 import java.util.regex.*;
 import java.io.*;
 import java.awt.CardLayout;
@@ -92,6 +90,11 @@ import javax.swing.SwingWorker;
         private JButton nextPage;
         private JButton previousPage;
         private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> commonCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> energyCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> uncommonCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> rareCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> holoCollection = new ArrayList<CardLabel>();
         private Dimension packsize = new Dimension(300, 515);
         private Dimension cardHolderDimension = new Dimension(1200, 1000);
         private Dimension wideScreen = new Dimension(1920, 1080);
@@ -156,7 +159,7 @@ import javax.swing.SwingWorker;
 
             String deskImagePath = "/backgrounds/wood_desk.png";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
-            desk2 = new JPanel() { // *** MIGHT NEED TO CHANGE TO JLayeredPane FOR CARDS TO APPEAR OVER BINDER PAGES ***
+            desk2 = new JPanel() { 
                 @Override
                 public void paintComponent(Graphics graphic) {
                     super.paintComponent(graphic);
@@ -176,8 +179,6 @@ import javax.swing.SwingWorker;
             displayArea.setVisible(true);
 
             GridBagConstraints gbConst1 = new GridBagConstraints();
-            //gbConst1.anchor = GridBagConstraints.CENTER;
-            //gbConst1.fill = GridBagConstraints.NONE;
 
             collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             collectionButtons.setBounds((wideScreen.width / 2), 0, 0, 0);
@@ -199,7 +200,6 @@ import javax.swing.SwingWorker;
             collectionButtons.add(previousPage);
 
             GridBagConstraints gbConst2 = new GridBagConstraints();
-            //gbConst2.anchor = GridBagConstraints.NORTH;
             desk2.add(collectionButtons, BorderLayout.NORTH);
 
             collection.add(displayArea, JLayeredPane.PALETTE_LAYER);
@@ -377,6 +377,18 @@ import javax.swing.SwingWorker;
             }
             public void addToCollection() {
                 cardCollection.add(this);
+                switch (this.rarity) {
+                    case "common":
+                        commonCollection.add(this);
+                    case "uncommon":
+                        uncommonCollection.add(this);
+                    case "energy":
+                        energyCollection.add(this);
+                    case "rare":
+                        rareCollection.add(this);
+                    case "holo":
+                        holoCollection.add(this);
+                }
             }
             public void shrinkCard() {
                 String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
@@ -453,12 +465,39 @@ import javax.swing.SwingWorker;
         public void showCardsInBinder() {
             // nextIndex = 0;
             // previousIndex = 0;
-            // currentIndex = 0;
+            int currentIndex = 0;
 
             if (displayArea.getComponentCount() == 1) {
                 if (currIndex == 0 && previousIndex == 0 && nextIndex == 0) {
                     nextIndex += 18;
                 };
+            }
+            for (CardLabel i : cardCollection) {
+                cardHolder.add(i);
+                cardHolder.revalidate();
+                cardHolder.repaint();
+                currentIndex++;
+            }
+        }
+
+        public void writeToCSVs() {
+            for (CardLabel i : cardCollection) {
+                
+            }
+            for (CardLabel i : commonCollection) {
+                
+            }
+            for (CardLabel i : energyCollection) {
+                
+            }
+            for (CardLabel i : uncommonCollection) {
+                
+            }
+            for (CardLabel i : rareCollection) {
+                
+            }
+            for (CardLabel i : holoCollection) {
+                
             }
         }
 
