@@ -155,6 +155,7 @@ import javax.swing.SwingWorker;
 
         private JLayeredPane createCollectionPanel() {
             collection = new JLayeredPane();
+            collection.setLayout(null);
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
             String deskImagePath = "/backgrounds/wood_desk.png";
@@ -678,19 +679,18 @@ import javax.swing.SwingWorker;
             ImageIcon blastoisePack = new ImageIcon(getClass().getResource(blastoisePackPath));
             Random rng2 = new Random();
             
-            int num = rng2.nextInt(2);
-            if (num == 0) {
-                ImageIcon newVenusaurPack = resizePackImage(venusaurPack);
-                randomPackImage = newVenusaurPack;
+            int num = rng2.nextInt(3);
+            switch (num) {
+                case 0:
+                    ImageIcon newVenusaurPack = resizePackImage(venusaurPack);
+                    randomPackImage = newVenusaurPack;
+                case 1:
+                    ImageIcon newCharizardPack = resizePackImage(charizardPack);
+                    randomPackImage = newCharizardPack;
+                case 2:
+                    ImageIcon newBlastoisePack = resizePackImage(blastoisePack);
+                    randomPackImage = newBlastoisePack;
             }
-            else if (num == 1) {
-                ImageIcon newCharizardPack = resizePackImage(charizardPack);
-                randomPackImage = newCharizardPack;
-            }
-            else if (num == 2) {
-                ImageIcon newBlastoisePack = resizePackImage(blastoisePack);
-                randomPackImage = newBlastoisePack;
-            };
             return randomPackImage;
         }
 
