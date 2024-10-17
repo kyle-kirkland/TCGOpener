@@ -155,7 +155,6 @@ import javax.swing.SwingWorker;
 
         private JLayeredPane createCollectionPanel() {
             collection = new JLayeredPane();
-            collection.setLayout(null);
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
 
             String deskImagePath = "/backgrounds/wood_desk.png";
@@ -172,11 +171,10 @@ import javax.swing.SwingWorker;
             desk2.setOpaque(true);
             desk2.setVisible(true);
 
-            Dimension pageMaxSize = new Dimension((wideScreen.width - 50), (wideScreen.height - 50));
-            displayArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 60, 10));
-            displayArea.setBounds(25, 25, pageMaxSize.width, pageMaxSize.height);
-            displayArea.setBackground(Color.BLUE);
-            displayArea.setOpaque(true);
+            Dimension pageMaxSize = new Dimension((wideScreen.width - 550), (wideScreen.height - 100));
+            displayArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 75, 12));
+            displayArea.setBounds(40, 50, pageMaxSize.width, pageMaxSize.height);
+            displayArea.setOpaque(false);
             displayArea.setVisible(true);
 
             GridBagConstraints gbConst1 = new GridBagConstraints();
@@ -203,8 +201,10 @@ import javax.swing.SwingWorker;
             GridBagConstraints gbConst2 = new GridBagConstraints();
             desk2.add(collectionButtons, BorderLayout.NORTH);
 
-            collection.add(displayArea, JLayeredPane.PALETTE_LAYER);
             collection.add(desk2, JLayeredPane.DEFAULT_LAYER);
+            collection.add(displayArea, JLayeredPane.PALETTE_LAYER);
+            collection.revalidate();
+            collection.repaint();
             revalidate();
             repaint();
 
@@ -474,9 +474,9 @@ import javax.swing.SwingWorker;
                 };
             }
             for (CardLabel i : cardCollection) {
-                cardHolder.add(i);
-                cardHolder.revalidate();
-                cardHolder.repaint();
+                displayArea.add(i);
+                displayArea.revalidate();
+                displayArea.repaint();
                 currentIndex++;
             }
         }
@@ -814,7 +814,9 @@ import javax.swing.SwingWorker;
                 protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
                     try {
                         ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
-
+                        hand.removeAll();
+                        hand.revalidate();
+                        hand.repaint();
                         currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
                         currentPack.get(0).setVisible(true);
                         inputPane.add(currentPack.get(0));
@@ -823,7 +825,6 @@ import javax.swing.SwingWorker;
                             currentPack.get(i).setVisible(true);
                             inputPane.add(currentPack.get(i));
                         }
-                        cardHolder.removeAll();
                         cardHolder.revalidate();
                         cardHolder.repaint();
                         hand.revalidate();
