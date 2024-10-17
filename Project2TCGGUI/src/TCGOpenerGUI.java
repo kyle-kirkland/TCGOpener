@@ -1,69 +1,60 @@
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.FlowLayout;
-import java.awt.BorderLayout;
-//import java.awt.event.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import java.awt.*;      /**
+                            Using:  GridBagConstraints, GridBagLayout, FlowLayout, BorderLayout, CardLayout
+                                    Graphics, Image, Insets, Dimension, Color
+                        */
+import java.awt.event.*;/**
+                            Using: ActionEvent, ActionListener, KeyEvent, KeyListener, MouseAdapter, MouseEvent
+                        */
+import java.util.*;     /**
+                            Using: ArrayList, Random, Scanner     
+                        */
+import javax.swing.*;   /**
+                            Using: JFrame, JButton, JPanel, JLabel, JLayeredPane, ImageIcon, SwingUtilities, SwingWorker
+                        */
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.regex.*;
-import java.io.*;
-import java.awt.CardLayout;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Color;
-//import javax.swing.*;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 /**
- * - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
- * - Things to look up: 
- *      - paint() method, what it does and how to use it
- *      - do I need to create a custom class that extends JPanel
- *      - how to better implement GridBagConstraints with GridBagLayout 
- *          - see if there is a better alternative to GridBagLayout (upon initial research looks like GridBagLayout is best bet)
- *          - use CardLayout for cycling through a freshly opened booster pack
- * - Show booster pack wrapping before opening
- * - Score could be points based off of rarity of card pulled
- * - Give option to reorganize opened cards so that the rare is on the bottom
- * - Maybe add a sleeve animation for super rares
- * - Layout opened cards beside each other
- * - Each booster pack has 11 cards
- *      - 1 rare
- *      - 3 uncommon 
- *      - 5 commons
- *      - 2 energy cards
- * - View hierarchy (priority = number of *):
- *      - Main JFrame ***
- *          - root JPanel (CardLayout) ***
- *              - startscreen JPanel (GridBagLayout) **
- *              - collection JPanel (GridBagLayout) **
- *              - desk JLayeredPane ***
- *                  - cardsUnpacking JPanel (GridBagLayout) ***
- *                  - cardsDisplayed JPanel (GridBagLayout) ***
- *                      - boosterCard CardPanel(or maybe CardLabel, idk yet) (CardLayout) ***
- *                      - boosterPack CardPanel (Default Layout)
- *                  - buttons JPanel (GridBagLayout) **
- *                  - cardDisplayArea JPanel (GridBagLayout) **
- *                  - wrapperDisplayArea JPanel (Default Layout) *
- *              - collection JPanel (GridBagLayout) **
- * 
- */
+*** TBD ***         - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
+*** TBD ***         - Do I need to create a custom class that extends JPanel? (Maybe, might happen when refactoring code later)
+*** Added ***       - Use CardLayout for cycling through a freshly opened booster pack
+*** In Progress *** - Add options to display card collection by rarity
+*** TBD ***         - Show booster pack wrapping before opening (if added, won't be until much later, not messing with animations at the moment)
+*** TBD ***         - Score could be points based off of rarity of card pulled (energy = 0, common = 1, uncommon = 3, rare = 5, holo = 10)
+*** Added ***       - Give option to reorganize opened cards so that the rare is on the bottom *** Added ***
+*** TBD ***         - Maybe add a sleeve animation for super rares (if added, won't be until much later, not messing with animations at the moment)
+*** Added ***       - Layout opened cards beside each other
+*** In Progress *** - Add functionality to save current collection of cards to external files (currently CSV files, but may shift to JSON files)
+*** Added ***       - Each booster pack has 11 cards
+                        - 1 rare
+                        - 3 uncommon 
+                        - 5 commons
+                        - 2 energy cards
+                    - Hierarchy (priority = number of #):
+*** Done ***        - Main JFrame 
+*** Done ***            - root JPanel (CardLayout, root panel for whole GUI) 
+*** In Progress ***         - startscreen JPanel (GridBagLayout) ###
+*** Current Focus ***       - collection JLayeredPane (root pane for collection) ###
+*** Done ***                    - desk2 JPanel (BorderLayout, holds image of desk and collectionButtons panel)
+*** Done ***                    - displayArea JPanel (FlowLayout, holds current "page" of cards from collection binder)
+*** Done ***                    - collectionButtons JPanel (FlowLayout)
+*** Done ***                        - fromCollectiontoDesk JButton (moves to Desk screen)
+*** Done ***                        - openBinder JButton (pulls cards in collection until displayArea is full)
+*** TBD ***                         - nextPage JButton (will remove current cards in displayArea and pull in the next several cards)
+*** TBD ***                         - previousPage JButton (will remove current cards in displayArea and pull in the previous several cards)
+*** Done ***                - desk1 JLayeredPane (root panel for desk1, pack opening screen) 
+*** Done ***                    - hand JPanel (CardLayout) 
+*** Done ***                        - boosterPack CardLabel (type = "pack") 
+*** Done ***                        - boosterCard CardLabel (type = "card") 
+*** Done ***                    - desk1Panel JPanel (GridBagLayout, holds image of desk) 
+*** Done ***                        - newPack JButton (builds and presents a new booster pack to be opened) 
+*** Done ***                        - revealNormal JButton (sets rareLast = false, changes reveal order of cards in booster pack to how the cards are packed) 
+*** Done ***                        - revealRare JButton (sets rareLast = true, changes reveal order of cards in booster pack to reveal the rare card last) 
+*** Done ***                        - fromDesktoCollection JButton (moves to Collection screen) 
+*** Done ***                    - cardHolder JPanel (FlowLayout, cards appear here after being clicked until entire booster pack (11 cards) are displayed) 
+*** TBD ***                     - wrapperDisplayArea JPanel (Default Layout) # (if added, won't be until much later, not messing with animations at the moment)  
+*/
 
     public class TCGOpenerGUI extends JFrame implements ActionListener {
         private JPanel root;
@@ -72,7 +63,7 @@ import javax.swing.SwingWorker;
         private JLayeredPane desk1;
         private JPanel desk2;
         private JLayeredPane hand;
-        private JPanel cardsDisplayed;
+        private JPanel desk1Panel;
         private JPanel cardHolder;
         private JPanel collectionButtons;
         private JPanel displayArea;
@@ -103,7 +94,6 @@ import javax.swing.SwingWorker;
         private SwingUtilities SU;
         private Pattern pattern;
         private Matcher matcher;
-        private File file;
         private String[] commonCardNames;
         private String[] energyCardNames;
         private String[] uncommonCardNames;
@@ -177,8 +167,6 @@ import javax.swing.SwingWorker;
             displayArea.setOpaque(false);
             displayArea.setVisible(true);
 
-            GridBagConstraints gbConst1 = new GridBagConstraints();
-
             collectionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
             collectionButtons.setBounds((wideScreen.width / 2), 0, 0, 0);
             collectionButtons.setOpaque(false);
@@ -198,7 +186,6 @@ import javax.swing.SwingWorker;
             collectionButtons.add(nextPage);
             collectionButtons.add(previousPage);
 
-            GridBagConstraints gbConst2 = new GridBagConstraints();
             desk2.add(collectionButtons, BorderLayout.NORTH);
 
             collection.add(desk2, JLayeredPane.DEFAULT_LAYER);
@@ -218,19 +205,18 @@ import javax.swing.SwingWorker;
             desk1.setPreferredSize(wideScreen); 
 
             deskImagePath = "/backgrounds/wood_desk.png";
-            String TEMPboosterpackPath = "/card_packs/venusaur_pack.jpg";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
 
-            cardsDisplayed = new JPanel() {
+            desk1Panel = new JPanel() {
                 @Override
                 public void paintComponent(Graphics graphic) {
                     super.paintComponent(graphic);
                     graphic.drawImage(deskImage, 0, 0, getWidth(), getHeight(), this);
                 }
             };
-            cardsDisplayed.setPreferredSize(wideScreen);
-            cardsDisplayed.setBackground(Color.GRAY);
-            cardsDisplayed.setBounds(0, 0, wideScreen.width, wideScreen.height); 
+            desk1Panel.setPreferredSize(wideScreen);
+            desk1Panel.setBackground(Color.GRAY);
+            desk1Panel.setBounds(0, 0, wideScreen.width, wideScreen.height); 
 
             hand = new JLayeredPane();
             hand.setPreferredSize(packsize);
@@ -258,20 +244,20 @@ import javax.swing.SwingWorker;
             gbConst.gridy = 0;
             gbConst.anchor = GridBagConstraints.LINE_START;
             gbConst.fill = GridBagConstraints.NONE;
-            cardsDisplayed.add(fromDesktoCollection, gbConst);
+            desk1Panel.add(fromDesktoCollection, gbConst);
 
             gbConst.gridx = 1;
-            cardsDisplayed.add(revealNormal, gbConst);
+            desk1Panel.add(revealNormal, gbConst);
 
             gbConst.gridx = 2;
-            cardsDisplayed.add(revealRare, gbConst);
+            desk1Panel.add(revealRare, gbConst);
 
             gbConst.gridx = 3;
-            cardsDisplayed.add(newPack, gbConst);
+            desk1Panel.add(newPack, gbConst);
 
             desk1.add(hand, JLayeredPane.PALETTE_LAYER);
             desk1.add(cardHolder, JLayeredPane.PALETTE_LAYER);
-            desk1.add(cardsDisplayed, JLayeredPane.DEFAULT_LAYER);
+            desk1.add(desk1Panel, JLayeredPane.DEFAULT_LAYER);
             desk1.revalidate();
             desk1.repaint();
 
@@ -355,6 +341,9 @@ import javax.swing.SwingWorker;
                         protected Void doInBackground() throws Exception {
                             shrinkCard();
                             addToCollection();
+                            if (hand.getComponentCount() == 0) {
+                                saveCollectionToCSVs();
+                            }
                             return null;
                         }
                         @Override
@@ -481,24 +470,28 @@ import javax.swing.SwingWorker;
             }
         }
 
-        public void writeToCSVs() {
-            for (CardLabel i : cardCollection) {
-                
+        public void saveCollectionToCSVs() {
+            saveCardsToCSV(cardCollection, "/collection_CSVs/overallCollection.csv");
+            saveCardsToCSV(commonCollection, "/collection_CSVs/commonCollection.csv");
+            saveCardsToCSV(energyCollection, "/collection_CSVs/energyCollection.csv");
+            saveCardsToCSV(uncommonCollection, "/collection_CSVs/uncommonCollection.csv");
+            saveCardsToCSV(rareCollection, "/collection_CSVs/rareCollection.csv");
+            saveCardsToCSV(holoCollection, "/collection_CSVs/holoCollection.csv");
+        }
+
+        private void saveCardsToCSV(ArrayList<CardLabel> cardList, String fileName) {
+            try (FileWriter writer = new FileWriter(fileName)) {
+                for (CardLabel card : cardList) {
+                    if (cardList.isEmpty()) {
+                        System.out.println("No cards to save from current card list.");
+                        break;
+                    }
+                    String info = card.getName() + "," + card.getImagePath() + "\n";
+                    writer.write(info);
+                }
             }
-            for (CardLabel i : commonCollection) {
-                
-            }
-            for (CardLabel i : energyCollection) {
-                
-            }
-            for (CardLabel i : uncommonCollection) {
-                
-            }
-            for (CardLabel i : rareCollection) {
-                
-            }
-            for (CardLabel i : holoCollection) {
-                
+            catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
