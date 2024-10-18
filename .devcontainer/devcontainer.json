@@ -28,5 +28,5 @@
     "--cap-add=SYS_ADMIN",
     "--cap-add=SYS_PTRACE"
   ],
-  "postCreateCommand": "bash .devcontainer/codespace-setup.sh"
+  "postCreateCommand": "bash /.devcontainer/codespace-setup.sh"
 }
