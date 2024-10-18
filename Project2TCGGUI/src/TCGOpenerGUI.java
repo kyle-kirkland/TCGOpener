@@ -368,16 +368,21 @@ import java.util.regex.*;
             public void addToCollection() {
                 cardCollection.add(this);
                 switch (this.rarity) {
-                    case "common":
+                    case "Common":
                         commonCollection.add(this);
-                    case "uncommon":
+                        break;
+                    case "Uncommon":
                         uncommonCollection.add(this);
-                    case "energy":
+                        break;
+                    case "Energy":
                         energyCollection.add(this);
-                    case "rare":
+                        break;
+                    case "Rare":
                         rareCollection.add(this);
-                    case "holo":
+                        break;
+                    case "Holo":
                         holoCollection.add(this);
+                        break;
                 }
             }
             public void shrinkCard() {
@@ -471,12 +476,12 @@ import java.util.regex.*;
         }
 
         public void saveCollectionToCSVs() {
-            saveCardsToCSV(cardCollection, "/collection_CSVs/overallCollection.csv");
-            saveCardsToCSV(commonCollection, "/collection_CSVs/commonCollection.csv");
-            saveCardsToCSV(energyCollection, "/collection_CSVs/energyCollection.csv");
-            saveCardsToCSV(uncommonCollection, "/collection_CSVs/uncommonCollection.csv");
-            saveCardsToCSV(rareCollection, "/collection_CSVs/rareCollection.csv");
-            saveCardsToCSV(holoCollection, "/collection_CSVs/holoCollection.csv");
+            saveCardsToCSV(cardCollection, "Project2TCGGUI/src/data/overallCollection.csv");
+            saveCardsToCSV(commonCollection, "Project2TCGGUI/src/data/commonCollection.csv");
+            saveCardsToCSV(energyCollection, "Project2TCGGUI/src/data/energyCollection.csv");
+            saveCardsToCSV(uncommonCollection, "Project2TCGGUI/src/data/uncommonCollection.csv");
+            saveCardsToCSV(rareCollection, "Project2TCGGUI/src/data/rareCollection.csv");
+            saveCardsToCSV(holoCollection, "Project2TCGGUI/src/data/holoCollection.csv");
         }
 
         private void saveCardsToCSV(ArrayList<CardLabel> cardList, String fileName) {
@@ -494,6 +499,30 @@ import java.util.regex.*;
                 e.printStackTrace();
             }
         }
+
+        //*************************************     SHOULDN'T NEED WHEN PROJECT IS DONE, MAYBE
+        public void clearAllCsvFiles() {
+            String[] csvFiles = {
+                "Project2TCGGUI/src/data/cardCollection.csv",
+                "Project2TCGGUI/src/data/commonCollection.csv",
+                "Project2TCGGUI/src/data/uncommonCollection.csv",
+                "Project2TCGGUI/src/data/energyCollection.csv",
+                "Project2TCGGUI/src/data/rareCollection.csv",
+                "Project2TCGGUI/src/data/holoCollection.csv"
+            };
+        
+            for (String filePath : csvFiles) {
+                try (FileWriter writer = new FileWriter(filePath, false)) {
+                    // Create a FileWriter without the append flag to overwrite the file content
+                    writer.write(""); // Overwrites file with nothing, effectively clearing it
+                } catch (IOException e) {
+                    System.err.println("Error clearing file: " + filePath);
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //*************************************
 
         public ArrayList<CardLabel> packCards() {
             ArrayList<CardLabel> currentPack = new ArrayList<CardLabel>(assignImagestoPack(buildPack()));
@@ -671,18 +700,20 @@ import java.util.regex.*;
             ImageIcon charizardPack = new ImageIcon(getClass().getResource(charizardPackPath));
             ImageIcon blastoisePack = new ImageIcon(getClass().getResource(blastoisePackPath));
             Random rng2 = new Random();
-            
             int num = rng2.nextInt(3);
             switch (num) {
                 case 0:
                     ImageIcon newVenusaurPack = resizePackImage(venusaurPack);
                     randomPackImage = newVenusaurPack;
+                    break;
                 case 1:
                     ImageIcon newCharizardPack = resizePackImage(charizardPack);
                     randomPackImage = newCharizardPack;
+                    break;
                 case 2:
                     ImageIcon newBlastoisePack = resizePackImage(blastoisePack);
                     randomPackImage = newBlastoisePack;
+                    break;
             }
             return randomPackImage;
         }
@@ -703,6 +734,8 @@ import java.util.regex.*;
             String holoPath = "/cardImages/largeCards/holo/";           // allCardNames[4] = holoNames;
             String uncommonPath = "/cardImages/largeCards/uncommon/";   // allCardNames[2] = uncommonNames;
             boosterPack = new CardLabel(randomPack());
+            boosterPack.revalidate();
+            boosterPack.repaint();
 
             // Normal card reveal method
             if (!rareLast) {
@@ -718,7 +751,7 @@ import java.util.regex.*;
                         String currentEnergy = energyPath + allCardNames[1][pack[i]] + "energy(" + pack[i] + ").jpg";
                         boosterCard = new CardLabel(currentEnergy);
                         boosterCard.setName(fixCardName(allCardNames[1][pack[i]]));
-                        boosterCard.setRarity("Common");
+                        boosterCard.setRarity("Energy");
                         packImages.add(boosterCard);
                     }
                     else if (i == 8) {
@@ -727,7 +760,7 @@ import java.util.regex.*;
                             String currentHolo = holoPath + allCardNames[4][pack[i]] + "holo(" + pack[i] + ").jpg";
                             boosterCard = new CardLabel(currentHolo);
                             boosterCard.setName(fixCardName(allCardNames[4][pack[i]]));
-                            boosterCard.setRarity("Holo Rare");
+                            boosterCard.setRarity("Holo");
                             packImages.add(boosterCard);
                         }
                         else {
@@ -762,7 +795,7 @@ import java.util.regex.*;
                         String currentEnergy = energyPath + allCardNames[1][pack[j]] + "energy(" + pack[j] + ").jpg";
                         boosterCard = new CardLabel(currentEnergy);
                         boosterCard.setName(fixCardName(allCardNames[1][pack[j]]));
-                        boosterCard.setRarity("Common");
+                        boosterCard.setRarity("Energy");
                         packImages.add(boosterCard);
                     }
                     else if (j >= 8 && j < 11) {
@@ -778,7 +811,7 @@ import java.util.regex.*;
                             String currentHolo = holoPath + allCardNames[4][pack[j]] + "holo(" + pack[j] + ").jpg";
                             boosterCard = new CardLabel(currentHolo);
                             boosterCard.setName(fixCardName(allCardNames[4][pack[j]]));
-                            boosterCard.setRarity("Holo Rare");
+                            boosterCard.setRarity("Holo");
                             packImages.add(boosterCard);
                         }
                         else {
@@ -800,6 +833,10 @@ import java.util.regex.*;
             SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
                 @Override
                 protected ArrayList<CardLabel> doInBackground() throws Exception {
+                    
+                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
+                    clearAllCsvFiles();
+                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
                     return packCards();
                 }
 
@@ -807,6 +844,9 @@ import java.util.regex.*;
                 protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
                     try {
                         ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
+                        cardHolder.removeAll();
+                        cardHolder.revalidate();
+                        cardHolder.repaint();
                         hand.removeAll();
                         hand.revalidate();
                         hand.repaint();
