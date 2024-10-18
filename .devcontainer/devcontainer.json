@@ -23,5 +23,10 @@
     }
   },
   "runArgs": ["--shm-size=1g"],
-  "runArgs": ["--init"]
+  "runArgs": ["--init"],
+  "postCreateCommand": "xrandr --output VNC-0 --mode 1920x1200",
+  "runArgs": [
+    "--cap-add=SYS_ADMIN",
+    "--cap-add=SYS_PTRACE"
+  ]
 }
