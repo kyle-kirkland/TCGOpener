@@ -21,12 +21,5 @@
         "vscjava.vscode-java-pack"
       ]
     }
-  },
-  "runArgs": [    
-    "--shm-size=1g",
-    "--init",
-    "--cap-add=SYS_ADMIN",
-    "--cap-add=SYS_PTRACE"
-  ],
-  "postCreateCommand": "bash /.devcontainer/codespace-setup.sh"
+  }
 }
