@@ -11,8 +11,13 @@ import java.util.*;     /**
 import javax.swing.*;   /**
                             Using: JFrame, JButton, JPanel, JLabel, JLayeredPane, ImageIcon, SwingUtilities, SwingWorker
                         */
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.regex.*;
 
 /**
@@ -80,7 +85,7 @@ import java.util.regex.*;
         private JButton openBinder;
         private JButton nextPage;
         private JButton previousPage;
-        private ArrayList<CardLabel> cardCollection = new ArrayList<CardLabel>();
+        private ArrayList<CardLabel> overallCollection = new ArrayList<CardLabel>();
         private ArrayList<CardLabel> commonCollection = new ArrayList<CardLabel>();
         private ArrayList<CardLabel> energyCollection = new ArrayList<CardLabel>();
         private ArrayList<CardLabel> uncommonCollection = new ArrayList<CardLabel>();
@@ -366,7 +371,7 @@ import java.util.regex.*;
                 cardHolder.repaint();
             }
             public void addToCollection() {
-                cardCollection.add(this);
+                overallCollection.add(this);
                 switch (this.rarity) {
                     case "Common":
                         commonCollection.add(this);
@@ -461,13 +466,14 @@ import java.util.regex.*;
             // nextIndex = 0;
             // previousIndex = 0;
             int currentIndex = 0;
+            buildCollectionFromCSVs();
 
             if (displayArea.getComponentCount() == 1) {
                 if (currIndex == 0 && previousIndex == 0 && nextIndex == 0) {
                     nextIndex += 18;
                 };
             }
-            for (CardLabel i : cardCollection) {
+            for (CardLabel i : overallCollection) {
                 displayArea.add(i);
                 displayArea.revalidate();
                 displayArea.repaint();
@@ -476,7 +482,7 @@ import java.util.regex.*;
         }
 
         public void saveCollectionToCSVs() {
-            saveCardsToCSV(cardCollection, "Project2TCGGUI/src/data/overallCollection.csv");
+            saveCardsToCSV(overallCollection, "Project2TCGGUI/src/data/overallCollection.csv");
             saveCardsToCSV(commonCollection, "Project2TCGGUI/src/data/commonCollection.csv");
             saveCardsToCSV(energyCollection, "Project2TCGGUI/src/data/energyCollection.csv");
             saveCardsToCSV(uncommonCollection, "Project2TCGGUI/src/data/uncommonCollection.csv");
@@ -491,8 +497,46 @@ import java.util.regex.*;
                         System.out.println("No cards to save from current card list.");
                         break;
                     }
-                    String info = card.getName() + "," + card.getImagePath() + "\n";
+                    String info = card.getName() + "," + card.getImagePath() + "," + card.getRarity() + "\n";
                     writer.write(info);
+                }
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void buildCollectionFromCSVs() {
+            readCardsFromCSV(overallCollection, "/data/overallCollection.csv");
+            readCardsFromCSV(commonCollection, "/data/commonCollection.csv");
+            readCardsFromCSV(energyCollection, "/data/energyCollection.csv");
+            readCardsFromCSV(uncommonCollection, "/data/uncommonCollection.csv");
+            readCardsFromCSV(rareCollection, "/data/rareCollection.csv");
+            readCardsFromCSV(holoCollection, "/data/holoCollection.csv");
+        }
+
+        public void readCardsFromCSV(ArrayList<CardLabel> listOfCards, String csvPath) {
+            try {InputStream inStream = getClass().getResourceAsStream(csvPath);
+                if (inStream == null) {
+                    throw new FileNotFoundException("Collection CSV file not found.");
+                }
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+                
+                String card;
+                while ((card = reader.readLine())!= null) {
+                    String[] fields = card.split(",");
+
+                    String cardName = fields[0];
+                    String imagePath = fields[1];
+                    String rarity = fields[2];
+
+                    CardLabel currCard = new CardLabel(imagePath);
+                    currCard.shrinkCard();
+                    currCard.setName(cardName);
+                    currCard.setRarity(rarity);
+
+                    listOfCards.add(currCard);
                 }
             }
             catch (IOException e) {
@@ -503,7 +547,7 @@ import java.util.regex.*;
         //*************************************     SHOULDN'T NEED WHEN PROJECT IS DONE, MAYBE
         public void clearAllCsvFiles() {
             String[] csvFiles = {
-                "Project2TCGGUI/src/data/cardCollection.csv",
+                "Project2TCGGUI/src/data/overallCollection.csv",
                 "Project2TCGGUI/src/data/commonCollection.csv",
                 "Project2TCGGUI/src/data/uncommonCollection.csv",
                 "Project2TCGGUI/src/data/energyCollection.csv",
@@ -523,6 +567,47 @@ import java.util.regex.*;
         }
 
         //*************************************
+
+        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+            SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
+                @Override
+                protected ArrayList<CardLabel> doInBackground() throws Exception {
+                    
+                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
+                    clearAllCsvFiles();
+                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
+                    return packCards();
+                }
+
+                @Override
+                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                    try {
+                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
+                        cardHolder.removeAll();
+                        cardHolder.revalidate();
+                        cardHolder.repaint();
+                        hand.removeAll();
+                        hand.revalidate();
+                        hand.repaint();
+                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                        currentPack.get(0).setVisible(true);
+                        inputPane.add(currentPack.get(0));
+                        for (int i = 1; i < (currentPack.size()); i++) {
+                            currentPack.get(i).setBounds(0, 51, packsize.width, 413);
+                            currentPack.get(i).setVisible(true);
+                            inputPane.add(currentPack.get(i));
+                        }
+                        cardHolder.revalidate();
+                        cardHolder.repaint();
+                        hand.revalidate();
+                        hand.repaint();
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                }
+            };
+            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
+        }
 
         public ArrayList<CardLabel> packCards() {
             ArrayList<CardLabel> currentPack = new ArrayList<CardLabel>(assignImagestoPack(buildPack()));
@@ -827,47 +912,6 @@ import java.util.regex.*;
             
             packImages.add(0, boosterPack);
             return packImages;
-        }
-
-        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
-            SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
-                @Override
-                protected ArrayList<CardLabel> doInBackground() throws Exception {
-                    
-                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
-                    clearAllCsvFiles();
-                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
-                    return packCards();
-                }
-
-                @Override
-                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
-                    try {
-                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
-                        cardHolder.removeAll();
-                        cardHolder.revalidate();
-                        cardHolder.repaint();
-                        hand.removeAll();
-                        hand.revalidate();
-                        hand.repaint();
-                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
-                        currentPack.get(0).setVisible(true);
-                        inputPane.add(currentPack.get(0));
-                        for (int i = 1; i < (currentPack.size()); i++) {
-                            currentPack.get(i).setBounds(0, 51, packsize.width, 413);
-                            currentPack.get(i).setVisible(true);
-                            inputPane.add(currentPack.get(i));
-                        }
-                        cardHolder.revalidate();
-                        cardHolder.repaint();
-                        hand.revalidate();
-                        hand.repaint();
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                    }
-                }
-            };
-            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
         }
 
         public static void main(String[] args) {
