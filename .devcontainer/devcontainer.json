@@ -22,11 +22,11 @@
       ]
     }
   },
-  "runArgs": ["--shm-size=1g"],
-  "runArgs": ["--init"],
-  "postCreateCommand": "xrandr --output VNC-0 --mode 1920x1200",
-  "runArgs": [
+  "runArgs": [    
+    "--shm-size=1g",
+    "--init",
     "--cap-add=SYS_ADMIN",
     "--cap-add=SYS_PTRACE"
-  ]
+  ],
+  "postCreateCommand": "bash .devcontainer/codespace-setup.sh"
 }
