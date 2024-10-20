@@ -9,15 +9,11 @@ import java.util.*;     /**
                             Using: ArrayList, Random, Scanner     
                         */
 import javax.swing.*;   /**
-                            Using: JFrame, JButton, JPanel, JLabel, JLayeredPane, ImageIcon, SwingUtilities, SwingWorker
+                            Using: JFrame, JButton, JComboBox, JPanel, JLabel, JLayeredPane, ImageIcon, SwingUtilities, SwingWorker
                         */
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;       /**
+                            Using: BufferedReader, FileNotFoundException, FileWriter, IOException, InputStream, InputStreamReader
+                        */
 import java.util.regex.*;
 
 /**
@@ -61,59 +57,64 @@ import java.util.regex.*;
 *** TBD ***                     - wrapperDisplayArea JPanel (Default Layout) # (if added, won't be until much later, not messing with animations at the moment)  
 */
 
-    public class TCGOpenerGUI extends JFrame implements ActionListener {
-        private JPanel root;
-        private JPanel welcomescreen;
-        private JLayeredPane collection;
-        private JLayeredPane desk1;
-        private JPanel desk2;
-        private JLayeredPane hand;
-        private JPanel desk1Panel;
-        private JPanel cardHolder;
-        private JPanel collectionButtons;
-        private JPanel displayArea;
-        private CardLabel boosterCard;
-        private CardLabel boosterPack;
-        private GridBagConstraints gbConst;
-        private JButton fromWelcometoDesk;
-        private JButton fromWelcometoCollection;
-        private JButton fromCollectiontoDesk;
-        private JButton fromDesktoCollection;
-        private JButton revealNormal;
-        private JButton revealRare;
-        private JButton newPack;
-        private JButton openBinder;
-        private JButton nextPage;
-        private JButton previousPage;
-        private ArrayList<CardLabel> overallCollection = new ArrayList<CardLabel>();
-        private ArrayList<CardLabel> commonCollection = new ArrayList<CardLabel>();
-        private ArrayList<CardLabel> energyCollection = new ArrayList<CardLabel>();
-        private ArrayList<CardLabel> uncommonCollection = new ArrayList<CardLabel>();
-        private ArrayList<CardLabel> rareCollection = new ArrayList<CardLabel>();
-        private ArrayList<CardLabel> holoCollection = new ArrayList<CardLabel>();
-        private Dimension packsize = new Dimension(300, 515);
-        private Dimension cardHolderDimension = new Dimension(1200, 1000);
-        private Dimension wideScreen = new Dimension(1920, 1080);
-        private Dimension smallScreen = new Dimension(1280, 720);
-        private Image deskImage;
-        private SwingUtilities SU;
-        private Pattern pattern;
-        private Matcher matcher;
-        private String[] commonCardNames;
-        private String[] energyCardNames;
-        private String[] uncommonCardNames;
-        private String[] rareCardNames;
-        private String[] holoCardNames;
-        private String frameTitle;
-        private String deskImagePath;
-        private boolean rareLast = false;
-        private int handStartX = (wideScreen.width - packsize.width) - 150;
-        private int handStartY = (wideScreen.height - packsize.height) - 200;
-        private int sshandStartX = (smallScreen.width - packsize.width) - 150;
-        private int sshandStartY = (smallScreen.height - packsize.height) - 200;
-        private int nextIndex = 0;
-        private int previousIndex = 0;
-        private int currIndex = 0;
+public class TCGOpenerGUI extends JFrame implements ActionListener {
+    private JPanel root;
+    private JPanel welcomescreen;
+    private JLayeredPane collection;
+    private JLayeredPane desk1;
+    private JPanel desk2;
+    private JLayeredPane hand;
+    private JPanel desk1Panel;
+    private JPanel cardHolder;
+    private JPanel collectionButtons;
+    private JPanel displayArea;
+    private CardLabel boosterCard;
+    private CardLabel boosterPack;
+    private GridBagConstraints gbConst;
+    private JButton fromWelcometoDesk;
+    private JButton fromWelcometoCollection;
+    private JButton fromCollectiontoDesk;
+    private JButton fromDesktoCollection;
+    private JButton revealNormal;
+    private JButton revealRare;
+    private JButton newPack;
+    private JButton openBinder;
+    private JButton nextPage;
+    private JButton previousPage;
+    private ArrayList<CardLabel> overallCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> commonCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> energyCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> uncommonCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> rareCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> holoCollection = new ArrayList<CardLabel>();
+    private ArrayList<CardLabel> currCollection = overallCollection;
+    private Dimension packsize = new Dimension(300, 515);
+    private Dimension cardHolderDimension = new Dimension(1200, 1000);
+    private Dimension wideScreen = new Dimension(1920, 1080);
+    private Dimension smallScreen = new Dimension(1280, 720);
+    private Image deskImage;
+    private SwingUtilities SU;
+    private Pattern pattern;
+    private Matcher matcher;
+    private String[] commonCardNames;
+    private String[] energyCardNames;
+    private String[] uncommonCardNames;
+    private String[] rareCardNames;
+    private String[] holoCardNames;
+    private String frameTitle;
+    private String deskImagePath;
+    private boolean rareLast = false;
+    private int handStartX = (wideScreen.width - packsize.width) - 150;
+    private int handStartY = (wideScreen.height - packsize.height) - 200;
+    private int sshandStartX = (smallScreen.width - packsize.width) - 150;
+    private int sshandStartY = (smallScreen.height - packsize.height) - 200;
+    private int[] startIndex = {0, 0, 0, 0, 0, 0};      // int[0] = overall, int [1] = common, int[2] = energy,
+    private int[] endIndex = {12, 12, 12, 12, 12, 12};        // int[3] = uncommon, int[4] = rare, int[5] = holo
+    private int[] currIndex = {0, 0, 0, 0, 0, 0};
+    private int[] currCollectionSizes;
+    private int chosenCurrIndex = 0;
+    private int chosenStartIndex = 0;
+    private int chosenEndIndex = 12;   
 
         public TCGOpenerGUI() {
 
@@ -177,17 +178,70 @@ import java.util.regex.*;
             collectionButtons.setOpaque(false);
             collectionButtons.setVisible(true);
 
+            JComboBox<String> chooseCollection = new JComboBox<>(new String[]{"Overall Collection", "Common", "Energy", "Uncommon", "Rare", "Holo"});
+            chooseCollection.setSelectedIndex(0);
+            chooseCollection.addActionListener(event -> {                       // *** LAMBDA ***
+                int chosenCollection = chooseCollection.getSelectedIndex();
+                switch (chosenCollection) {
+                    case 0:
+                        currCollection = overallCollection;
+                        chosenCurrIndex = currIndex[0];
+                        chosenStartIndex = startIndex[0];
+                        chosenEndIndex = endIndex[0];
+                        break;
+                    case 1:
+                        currCollection = commonCollection;
+                        chosenCurrIndex = currIndex[1];
+                        chosenStartIndex = startIndex[1];
+                        chosenEndIndex = endIndex[1];
+                        break;
+                    case 2:
+                        currCollection = energyCollection;
+                        chosenCurrIndex = currIndex[2];
+                        chosenStartIndex = startIndex[2];
+                        chosenEndIndex = endIndex[2];
+                        break;
+                    case 3:
+                        currCollection = uncommonCollection;
+                        chosenCurrIndex = currIndex[3];
+                        chosenStartIndex = startIndex[3];
+                        chosenEndIndex = endIndex[3];
+                        break;
+                    case 4:
+                        currCollection = rareCollection;
+                        chosenCurrIndex = currIndex[4];
+                        chosenStartIndex = startIndex[4];
+                        chosenEndIndex = endIndex[4];
+                        break;
+                    case 5:
+                        currCollection = holoCollection;
+                        chosenCurrIndex = currIndex[5];
+                        chosenStartIndex = startIndex[5];
+                        chosenEndIndex = endIndex[5];
+                        break;
+                }
+            });
+
             fromCollectiontoDesk = new JButton("To Desk");
-            fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
+            fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk"));           // *** LAMBDA ***
             openBinder = new JButton("Open Binder");
-            openBinder.addActionListener(event -> showCardsInBinder());
+            openBinder.addActionListener(event -> {
+                nextPage.setVisible(true);
+                previousPage.setVisible(true);
+                collectionButtons.revalidate();
+                collectionButtons.repaint();
+                updateDisplayArea(currCollection);
+            });
             nextPage = new JButton("Next Page");
-            nextPage.addActionListener(this);
+            nextPage.addActionListener(event -> nextButton(currCollection));     // *** LAMBDA ***
+            nextPage.setVisible(false);
             previousPage = new JButton("Previous Page");
-            previousPage.addActionListener(this);
+            previousPage.addActionListener(event -> previousButton(currCollection));     // *** LAMBDA ***
+            previousPage.setVisible(false);
 
             collectionButtons.add(fromCollectiontoDesk);
             collectionButtons.add(openBinder);
+            collectionButtons.add(chooseCollection);
             collectionButtons.add(nextPage);
             collectionButtons.add(previousPage);
 
@@ -301,7 +355,6 @@ import java.util.regex.*;
             public CardLabel(String cardFrontImagePath) {
                 this.type = "card";
                 this.cardFrontImagePath = cardFrontImagePath;
-                System.out.println(cardFrontImagePath); // *** DEBUG ***
                 ImageIcon resizedImage = new ImageIcon();
                 resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
                 setIcon(resizedImage);
@@ -392,7 +445,6 @@ import java.util.regex.*;
             }
             public void shrinkCard() {
                 String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
-                System.out.println(smallCardImagePath); // *** DEBUG ***
                 ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
                 this.setIcon(smallCardIcon);
             }
@@ -421,7 +473,7 @@ import java.util.regex.*;
                 return rarity;
             }
 
-            public String getImagePath() { // *** MIGHT NOT NEED ***
+            public String getImagePath() {
                 return cardFrontImagePath;
             }
 
@@ -453,32 +505,85 @@ import java.util.regex.*;
             rareLast = lastOrNot;
         }
 
-        public void navigateBinder() {
-            
-        }
         public void addCardstoDisplayArea(CardLabel currCard) {
             displayArea.add(currCard);
             displayArea.revalidate();
             displayArea.repaint();
         }
 
-        public void showCardsInBinder() {
-            // nextIndex = 0;
-            // previousIndex = 0;
-            int currentIndex = 0;
-            buildCollectionFromCSVs();
+        public void nextButton(ArrayList<CardLabel> currCollection) {
+            if (chosenCurrIndex < currCollection.size()) {
+                chosenStartIndex += 12;
+                chosenEndIndex += 12;
+                if (chosenEndIndex > currCollection.size()) {
+                    chosenEndIndex = currCollection.size();
+                }
+            }
 
-            if (displayArea.getComponentCount() == 1) {
-                if (currIndex == 0 && previousIndex == 0 && nextIndex == 0) {
-                    nextIndex += 18;
-                };
+            chosenCurrIndex = chosenStartIndex;
+
+            updateDisplayArea(currCollection);
+        }
+
+        public void previousButton(ArrayList<CardLabel> currCollection) {
+            if (chosenStartIndex > 0) {    
+                chosenStartIndex -= 12;
+                chosenEndIndex -= 12;
+                if (chosenStartIndex < 0) {
+                    chosenEndIndex = 0;
+                }
             }
-            for (CardLabel i : overallCollection) {
-                displayArea.add(i);
-                displayArea.revalidate();
-                displayArea.repaint();
-                currentIndex++;
+
+            chosenCurrIndex = chosenStartIndex;
+
+            updateDisplayArea(currCollection);
+        }
+
+        public void updateDisplayArea(ArrayList<CardLabel> currCollection) {
+            displayArea.removeAll();
+            for (int i = chosenStartIndex; i < chosenEndIndex; i++) {
+                if (i >= currCollection.size()) {
+                    break;
+                }
+                CardLabel card = currCollection.get(i);
+                displayArea.add(card);
             }
+
+            if (currCollection.size() <= 12) {
+                nextPage.setVisible(false);
+                previousPage.setVisible(false);
+            }
+            else {
+                if (chosenEndIndex >= currCollection.size()) {
+                    nextPage.setVisible(false);
+                }
+                else {
+                    nextPage.setVisible(true);
+                }
+                
+                if (chosenStartIndex <= 0) {
+                    previousPage.setVisible(false);
+                }
+                else {
+                    previousPage.setVisible(true);
+                }
+            }
+
+            displayArea.revalidate();
+            displayArea.repaint();
+        }
+
+        public void sortCollections() {
+            
+        }
+
+        public void setCurrCollectionSizes() {
+            currCollectionSizes[0] = overallCollection.size();
+            currCollectionSizes[1] = commonCollection.size();
+            currCollectionSizes[2] = energyCollection.size();
+            currCollectionSizes[3] = uncommonCollection.size();
+            currCollectionSizes[4] = rareCollection.size();
+            currCollectionSizes[5] = holoCollection.size();
         }
 
         public void saveCollectionToCSVs() {
