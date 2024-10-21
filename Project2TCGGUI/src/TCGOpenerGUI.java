@@ -111,6 +111,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private int[] startIndex = {0, 0, 0, 0, 0, 0};      // int[0] = overall, int [1] = common, int[2] = energy,
     private int[] endIndex = {12, 12, 12, 12, 12, 12};        // int[3] = uncommon, int[4] = rare, int[5] = holo
     private int[] currIndex = {0, 0, 0, 0, 0, 0};
+    private int[] startCollectionSizes = setCollectionSizes();
     private int[] currCollectionSizes;
     private int chosenCurrIndex = 0;
     private int chosenStartIndex = 0;
@@ -290,13 +291,17 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             cardHolder.setBounds(25, 25, cardHolderDimension.width, cardHolderDimension.height);
 
             newPack = new JButton("Open New Pack");
-            newPack.addActionListener(event -> openNewPack(hand)); // *** LAMBDA w/ SwingWorker IMPLEMENTATION ***
+            newPack.addActionListener(event -> openNewPack(hand));                    // *** LAMBDA w/ SwingWorker IMPLEMENTATION ***
             revealNormal = new JButton("Reveal Normal Order");
-            revealNormal.addActionListener(event -> revealCards(false)); // *** LAMBDA ***
+            revealNormal.addActionListener(event -> revealCards(false));    // *** LAMBDA ***
             revealRare = new JButton("Reveal Rare Last");
-            revealRare.addActionListener(event -> revealCards(true)); // *** LAMBDA ***
+            revealRare.addActionListener(event -> revealCards(true));       // *** LAMBDA ***
             fromDesktoCollection = new JButton("To Collection");
-            fromDesktoCollection.addActionListener(event -> switchPanel("Collection")); // *** LAMBDA ***
+            fromDesktoCollection.addActionListener(event -> {                         // *** LAMBDA ***
+                switchPanel("Collection");
+                sortCollections();
+            });
+            
 
             gbConst.insets = new Insets(10, 10, 10, 10);
             gbConst.gridx = 0;
@@ -512,26 +517,30 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         public void nextButton(ArrayList<CardLabel> currCollection) {
-            if (chosenCurrIndex < currCollection.size()) {
-                chosenStartIndex += 12;
-                chosenEndIndex += 12;
-                if (chosenEndIndex > currCollection.size()) {
-                    chosenEndIndex = currCollection.size();
-                }
+            chosenStartIndex += 12;
+            chosenEndIndex += 12;
+
+            if (chosenEndIndex > currCollection.size()) {
+                chosenEndIndex = currCollection.size();
             }
 
-            chosenCurrIndex = chosenStartIndex;
+            if (chosenStartIndex >= currCollection.size()) {
+                chosenStartIndex = currCollection.size() - (currCollection.size() % 12);
+            }
 
             updateDisplayArea(currCollection);
         }
 
         public void previousButton(ArrayList<CardLabel> currCollection) {
-            if (chosenStartIndex > 0) {    
-                chosenStartIndex -= 12;
-                chosenEndIndex -= 12;
-                if (chosenStartIndex < 0) {
-                    chosenEndIndex = 0;
-                }
+            chosenStartIndex -= 12;
+            chosenEndIndex -= 12;
+
+            if (chosenStartIndex < 0) {    
+                chosenEndIndex = 0;
+                chosenEndIndex = Math.min(12, currCollection.size());
+            }
+            else {
+                chosenEndIndex = chosenStartIndex + 12;
             }
 
             chosenCurrIndex = chosenStartIndex;
@@ -574,16 +583,60 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         public void sortCollections() {
-            
+            SwingWorker<Void, Void> sortWorker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    currCollectionSizes = setCollectionSizes();
+                    if (startCollectionSizes[0] != currCollectionSizes[0]) {
+                        overallCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = overallCollection.size();
+                    }
+                    if (startCollectionSizes[1] != currCollectionSizes[1]) {
+                        commonCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = commonCollection.size();
+                    }
+                    if (startCollectionSizes[2] != currCollectionSizes[2]) {
+                        energyCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = energyCollection.size();
+                    }
+                    if (startCollectionSizes[3] != currCollectionSizes[3]) {
+                        uncommonCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = uncommonCollection.size();
+                    }
+                    if (startCollectionSizes[4] != currCollectionSizes[4]) {
+                        rareCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = rareCollection.size();
+                    }
+                    if (startCollectionSizes[5] != currCollectionSizes[5]) {
+                        holoCollection.sort((card1, card2) -> card1.getName().compareToIgnoreCase(card2.getName()));
+                        currCollectionSizes[0] = holoCollection.size();
+                    }
+                    return null;
+                }
+                @Override
+                protected void done() {
+                    try {
+                        get();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            sortWorker.execute();
         }
 
-        public void setCurrCollectionSizes() {
-            currCollectionSizes[0] = overallCollection.size();
-            currCollectionSizes[1] = commonCollection.size();
-            currCollectionSizes[2] = energyCollection.size();
-            currCollectionSizes[3] = uncommonCollection.size();
-            currCollectionSizes[4] = rareCollection.size();
-            currCollectionSizes[5] = holoCollection.size();
+        public int[] setCollectionSizes() {
+            int[] tempCollectionSizes = new int[6];
+            tempCollectionSizes[0] = overallCollection.size();
+            tempCollectionSizes[1] = commonCollection.size();
+            tempCollectionSizes[2] = energyCollection.size();
+            tempCollectionSizes[3] = uncommonCollection.size();
+            tempCollectionSizes[4] = rareCollection.size();
+            tempCollectionSizes[5] = holoCollection.size();
+
+            return tempCollectionSizes;
         }
 
         public void saveCollectionToCSVs() {
