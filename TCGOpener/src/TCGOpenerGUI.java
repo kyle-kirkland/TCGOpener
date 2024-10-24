@@ -18,15 +18,14 @@ import java.util.regex.*;
 
 /**
 *** TBD ***         - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
-*** TBD ***         - Do I need to create a custom class that extends JPanel? (Maybe, might happen when refactoring code later)
 *** Added ***       - Use CardLayout for cycling through a freshly opened booster pack
-*** In Progress *** - Add options to display card collection by rarity
+*** Added *** - Add options to display card collection by rarity
 *** TBD ***         - Show booster pack wrapping before opening (if added, won't be until much later, not messing with animations at the moment)
 *** TBD ***         - Score could be points based off of rarity of card pulled (energy = 0, common = 1, uncommon = 3, rare = 5, holo = 10)
 *** Added ***       - Give option to reorganize opened cards so that the rare is on the bottom *** Added ***
 *** TBD ***         - Maybe add a sleeve animation for super rares (if added, won't be until much later, not messing with animations at the moment)
 *** Added ***       - Layout opened cards beside each other
-*** In Progress *** - Add functionality to save current collection of cards to external files (currently CSV files, but may shift to JSON files)
+*** Added ***       - Add functionality to save current collection of cards to external files (currently CSV files, but may shift to JSON files)
 *** Added ***       - Each booster pack has 11 cards
                         - 1 rare
                         - 3 uncommon 
@@ -36,14 +35,14 @@ import java.util.regex.*;
 *** Done ***        - Main JFrame 
 *** Done ***            - root JPanel (CardLayout, root panel for whole GUI) 
 *** In Progress ***         - startscreen JPanel (GridBagLayout) ###
-*** Current Focus ***       - collection JLayeredPane (root pane for collection) ###
+*** Done ***       - collection JLayeredPane (root pane for collection) ###
 *** Done ***                    - desk2 JPanel (BorderLayout, holds image of desk and collectionButtons panel)
 *** Done ***                    - displayArea JPanel (FlowLayout, holds current "page" of cards from collection binder)
 *** Done ***                    - collectionButtons JPanel (FlowLayout)
 *** Done ***                        - fromCollectiontoDesk JButton (moves to Desk screen)
 *** Done ***                        - openBinder JButton (pulls cards in collection until displayArea is full)
-*** TBD ***                         - nextPage JButton (will remove current cards in displayArea and pull in the next several cards)
-*** TBD ***                         - previousPage JButton (will remove current cards in displayArea and pull in the previous several cards)
+*** Done ***                         - nextPage JButton (will remove current cards in displayArea and pull in the next 12 cards)
+*** Done ***                         - previousPage JButton (will remove current cards in displayArea and pull in the previous 12 cards)
 *** Done ***                - desk1 JLayeredPane (root panel for desk1, pack opening screen) 
 *** Done ***                    - hand JPanel (CardLayout) 
 *** Done ***                        - boosterPack CardLabel (type = "pack") 
@@ -55,6 +54,36 @@ import java.util.regex.*;
 *** Done ***                        - fromDesktoCollection JButton (moves to Collection screen) 
 *** Done ***                    - cardHolder JPanel (FlowLayout, cards appear here after being clicked until entire booster pack (11 cards) are displayed) 
 *** TBD ***                     - wrapperDisplayArea JPanel (Default Layout) # (if added, won't be until much later, not messing with animations at the moment)  
+
+*** Things to do to wrap up project ***
+    - Add card zoom feature (probably using JLabel with images from largeCards folder)
+    - Break down overall program into smaller classes
+        - Class for building each screen (Desk, Collection, Welcome)
+        - Class for building each card (CardLabel)
+        - Class for building each pack (BoosterPack)
+        - Maybe a class just containing a bunch of the random helper methods? Is that a thing that's done?
+    - Identify which private fields can be made local to certain methods or even restrict to the broken off classes
+    - Add image for welcome screen (possibly take image used for desk and toss Pokemon logo over the buttons with a bunch of cards scattered 
+        around facing up and down, todo in GIMP)
+    - Add JavaDoc comments to all methods
+    - Clean up random commented out code
+    - Make sure to replace all of exceptions.printStackTrace() with proper logging
+    - Write up user manual for how to use program
+    - Final functionality should be as follows:
+        - Open program to welcome screen
+        - Basic usage instructions display on welcome screen as pop-up
+        - More specific instructions for each screen (Desk, Collection) as pop-up
+        - Choose to open packs or view collection
+        - Choose to reveal rare card last or reveal cards in normal order
+        - Open new pack to reveal 11 cards (5 common, 3 uncommon, 2 energy, 1 rare) stacked on top of each other
+        - Add each card to add to collection when clicked, and at the same time shrink the card and move it to the cardHolder
+        - Can continue to open new packs until the program is closed
+        - Click on collection to view all cards that have been collected
+        - Either sort by rarity or view all cards at once, sorted alphebetically by name
+        - Can cycle through pages in a collection (12 cards per page) both forward and backward (next/previous buttons)
+        - Can return to desk screen from collection screen
+        - All cards collected are saved to CSV files in the data folder and then read back in when the program is opened
+        - Can zoom into cards to see more detail 
 */
 
 public class TCGOpenerGUI extends JFrame implements ActionListener {
@@ -93,9 +122,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private Dimension wideScreen = new Dimension(1920, 1080);
     private Dimension smallScreen = new Dimension(1280, 720);
     private Image deskImage;
-    private SwingUtilities SU;
-    private Pattern pattern;
-    private Matcher matcher;
     private String[] commonCardNames;
     private String[] energyCardNames;
     private String[] uncommonCardNames;
@@ -109,7 +135,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private int sshandStartX = (smallScreen.width - packsize.width) - 150;
     private int sshandStartY = (smallScreen.height - packsize.height) - 200;
     private int[] startIndex = {0, 0, 0, 0, 0, 0};      // int[0] = overall, int [1] = common, int[2] = energy,
-    private int[] endIndex = {12, 12, 12, 12, 12, 12};        // int[3] = uncommon, int[4] = rare, int[5] = holo
+    private int[] endIndex = {12, 12, 12, 12, 12, 12};  // int[3] = uncommon, int[4] = rare, int[5] = holo
     private int[] currIndex = {0, 0, 0, 0, 0, 0};
     private int[] startCollectionSizes = setCollectionSizes();
     private int[] currCollectionSizes;
@@ -240,6 +266,16 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             previousPage.addActionListener(event -> previousButton(currCollection));     // *** LAMBDA ***
             previousPage.setVisible(false);
 
+            JPanel cardZoomPanel = new JPanel();
+            int cardZoomXpos = (int)(((wideScreen.getWidth()) / 2) - 250);
+            int cardZoomYpos = (int)(((wideScreen.getHeight()) / 2) - 344);
+            Dimension cardZoomSize = new Dimension(500, 688);
+            cardZoomPanel.setVisible(true);
+            cardZoomPanel.setBackground(Color.BLUE);
+            cardZoomPanel.setBounds(cardZoomXpos, cardZoomYpos, cardZoomSize.width, cardZoomSize.height);
+            //cardZoomPanel.setVisible(false);
+            // card ratio 300 by 413, 0.726
+
             collectionButtons.add(fromCollectiontoDesk);
             collectionButtons.add(openBinder);
             collectionButtons.add(chooseCollection);
@@ -250,6 +286,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
 
             collection.add(desk2, JLayeredPane.DEFAULT_LAYER);
             collection.add(displayArea, JLayeredPane.PALETTE_LAYER);
+            collection.add(cardZoomPanel, JLayeredPane.POPUP_LAYER);
             collection.revalidate();
             collection.repaint();
             revalidate();
@@ -380,9 +417,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        //if (event.isShiftDown()) {
-                        //    swapCardSize();
-                        //}
                         fromHandtoDesk();
                     }
                 });
@@ -640,12 +674,12 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         public void saveCollectionToCSVs() {
-            saveCardsToCSV(overallCollection, "Project2TCGGUI/src/data/overallCollection.csv");
-            saveCardsToCSV(commonCollection, "Project2TCGGUI/src/data/commonCollection.csv");
-            saveCardsToCSV(energyCollection, "Project2TCGGUI/src/data/energyCollection.csv");
-            saveCardsToCSV(uncommonCollection, "Project2TCGGUI/src/data/uncommonCollection.csv");
-            saveCardsToCSV(rareCollection, "Project2TCGGUI/src/data/rareCollection.csv");
-            saveCardsToCSV(holoCollection, "Project2TCGGUI/src/data/holoCollection.csv");
+            saveCardsToCSV(overallCollection, "TCGOpener/src/data/overallCollection.csv");
+            saveCardsToCSV(commonCollection, "TCGOpener/src/data/commonCollection.csv");
+            saveCardsToCSV(energyCollection, "TCGOpener/src/data/energyCollection.csv");
+            saveCardsToCSV(uncommonCollection, "TCGOpener/src/data/uncommonCollection.csv");
+            saveCardsToCSV(rareCollection, "TCGOpener/src/data/rareCollection.csv");
+            saveCardsToCSV(holoCollection, "TCGOpener/src/data/holoCollection.csv");
         }
 
         private void saveCardsToCSV(ArrayList<CardLabel> cardList, String fileName) {
@@ -916,7 +950,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             return allCardNames;
         }
 
-        // Rewrite to change size of card, using an additional JPanel or resizing the JLabel? Idk yet
         public ImageIcon resizePackImage(ImageIcon currentIcon) {
             ImageIcon newIcon;
             Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
@@ -1073,6 +1106,9 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         public static void main(String[] args) {
-            SwingUtilities.invokeLater(() -> new TCGOpenerGUI());
+            SwingUtilities.invokeLater(() -> {
+                TCGOpenerGUI newTCG = new TCGOpenerGUI();
+                newTCG.buildCollectionFromCSVs();
+            });
         }
     }
