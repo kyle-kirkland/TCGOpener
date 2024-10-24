@@ -14,7 +14,6 @@ import javax.swing.*;   /**
 import java.io.*;       /**
                             Using: BufferedReader, FileNotFoundException, FileWriter, IOException, InputStream, InputStreamReader
                         */
-import java.util.regex.*;
 
 /**
 *** TBD ***         - Possible way to run program in a browser: https://cheerpj.com/cheerpj-core/
@@ -97,8 +96,10 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private JPanel cardHolder;
     private JPanel collectionButtons;
     private JPanel displayArea;
+    private JPanel cardZoomPanel;
     private CardLabel boosterCard;
     private CardLabel boosterPack;
+    private CardLabel zoomedCard;
     private GridBagConstraints gbConst;
     private JButton fromWelcometoDesk;
     private JButton fromWelcometoCollection;
@@ -266,21 +267,18 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             previousPage.addActionListener(event -> previousButton(currCollection));     // *** LAMBDA ***
             previousPage.setVisible(false);
 
-            JPanel cardZoomPanel = new JPanel();
-            int cardZoomXpos = (int)(((wideScreen.getWidth()) / 2) - 250);
-            int cardZoomYpos = (int)(((wideScreen.getHeight()) / 2) - 344);
-            Dimension cardZoomSize = new Dimension(500, 688);
-            cardZoomPanel.setVisible(true);
-            cardZoomPanel.setBackground(Color.BLUE);
+            cardZoomPanel = new JPanel();
+            int cardZoomXpos = (int)(((wideScreen.getWidth()) / 2) - 300);
+            int cardZoomYpos = (int)(((wideScreen.getHeight()) / 2) - 412);
+            Dimension cardZoomSize = new Dimension(600, 825);
             cardZoomPanel.setBounds(cardZoomXpos, cardZoomYpos, cardZoomSize.width, cardZoomSize.height);
-            //cardZoomPanel.setVisible(false);
-            // card ratio 300 by 413, 0.726
+            cardZoomPanel.setVisible(false);
 
             collectionButtons.add(fromCollectiontoDesk);
             collectionButtons.add(openBinder);
             collectionButtons.add(chooseCollection);
-            collectionButtons.add(nextPage);
             collectionButtons.add(previousPage);
+            collectionButtons.add(nextPage);
 
             desk2.add(collectionButtons, BorderLayout.NORTH);
 
@@ -403,9 +401,17 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        //if (event.isShiftDown()) {
-                        //    swapCardSize();
-                        //}
+                        if (event.isShiftDown()) {
+                            if (isBig == false) {
+                                String largeCardPath = cardFrontImagePath.replaceAll("smallCards", "largeCards");
+                                isBig = true;
+                                swapCardSize(largeCardPath);
+                            }
+                            else {
+                                isBig = false;
+                                swapCardSize(cardFrontImagePath);
+                            }
+                        }
                         fromHandtoDesk();
                     }
                 });
@@ -482,6 +488,35 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                         break;
                 }
             }
+
+            public void swapCardSize(String path) {
+                ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(path));
+                if (zoomedCard != null) {
+                    cardZoomPanel.remove(zoomedCard);
+                }
+                zoomedCard = new CardLabel(smallCardIcon);
+                if (this.getisBig()) {
+                    setisBig(false);
+                    zoomedCard.setisBig(true);
+                    zoomedCard.setFocusable(true);
+                    zoomedCard.requestFocusInWindow();
+                    zoomedCard.addFocusListener(new FocusAdapter() {
+                        @Override
+                        public void focusLost(FocusEvent event) {
+                            zoomedCard.setisBig(false);
+                            cardZoomPanel.remove(zoomedCard);
+                            cardZoomPanel.setVisible(false);
+                            collection.revalidate();
+                            collection.repaint();
+                        }
+                    });
+                    cardZoomPanel.add(zoomedCard, BorderLayout.CENTER);
+                    cardZoomPanel.setVisible(true);
+                    collection.revalidate();
+                    collection.repaint();
+                }
+            }
+
             public void shrinkCard() {
                 String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
                 ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
@@ -512,20 +547,17 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 return rarity;
             }
 
+            public void setisBig(boolean isBig) {
+                this.isBig = isBig;
+            }
+
+            public boolean getisBig() {
+                return isBig;
+            }
+
             public String getImagePath() {
                 return cardFrontImagePath;
             }
-
-            // Will be method used to zoom into cards
-            //public void swapCardSize() {
-            //    if (!isBig) {
-            //        setIcon(resizeImage(cardFrontImagePath, bigSizeX, bigSizeY));
-            //        isBig = true;
-            //    } else {
-            //        setIcon(resizeImage(cardFrontImagePath, sizeX, sizeY));
-            //        isBig = false;
-            //    }
-            //}
         }
 
         /** ActionListener for buttons that can't use a lambda expression */
@@ -739,18 +771,18 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         //*************************************     SHOULDN'T NEED WHEN PROJECT IS DONE, MAYBE
         public void clearAllCsvFiles() {
             String[] csvFiles = {
-                "Project2TCGGUI/src/data/overallCollection.csv",
-                "Project2TCGGUI/src/data/commonCollection.csv",
-                "Project2TCGGUI/src/data/uncommonCollection.csv",
-                "Project2TCGGUI/src/data/energyCollection.csv",
-                "Project2TCGGUI/src/data/rareCollection.csv",
-                "Project2TCGGUI/src/data/holoCollection.csv"
+                "TCGOpener/src/data/overallCollection.csv",
+                "TCGOpener/src/data/commonCollection.csv",
+                "TCGOpener/src/data/uncommonCollection.csv",
+                "TCGOpener/src/data/energyCollection.csv",
+                "TCGOpener/src/data/rareCollection.csv",
+                "TCGOpener/src/data/holoCollection.csv"
             };
         
             for (String filePath : csvFiles) {
                 try (FileWriter writer = new FileWriter(filePath, false)) {
                     // Create a FileWriter without the append flag to overwrite the file content
-                    writer.write(""); // Overwrites file with nothing, effectively clearing it
+                    writer.write(""); 
                 } catch (IOException e) {
                     System.err.println("Error clearing file: " + filePath);
                     e.printStackTrace();
