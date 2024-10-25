@@ -55,14 +55,14 @@ import java.io.*;       /**
 *** TBD ***                     - wrapperDisplayArea JPanel (Default Layout) # (if added, won't be until much later, not messing with animations at the moment)  
 
 *** Things to do to wrap up project ***
-    - Add card zoom feature (probably using JLabel with images from largeCards folder)
+    - Add card zoom feature : DONE (ended up using a JPanel then adding a CardLabel (zoomedCard) to it with the corresponding image from largeCards folder)
     - Break down overall program into smaller classes
         - Class for building each screen (Desk, Collection, Welcome)
         - Class for building each card (CardLabel)
         - Class for building each pack (BoosterPack)
         - Maybe a class just containing a bunch of the random helper methods? Is that a thing that's done?
     - Identify which private fields can be made local to certain methods or even restrict to the broken off classes
-    - Add image for welcome screen (possibly take image used for desk and toss Pokemon logo over the buttons with a bunch of cards scattered 
+    - Add image for welcome screen (possibly take image used for desk and toss Pokemon logo over the buttons with a bunch of cards scattered    <--- DO NEXT
         around facing up and down, todo in GIMP)
     - Add JavaDoc comments to all methods
     - Clean up random commented out code
@@ -178,14 +178,14 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         private JLayeredPane createCollectionPanel() {
+            String tempZoomedPath = "/cardImages/largeCards/common/'Abra'common(1).jpg";
             collection = new JLayeredPane();
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
             collection.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent event) {
-                    Component clickedComponent = event .getComponent();
-                    if (clickedComponent != zoomedCard) {
-                        swapCardSize();
+                    if (zoomedCard != null && zoomedCard != event.getSource()) {
+                        swapCardSize(zoomedCard);
                     }
             }});
 
@@ -280,6 +280,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             int cardZoomYpos = (int)(((wideScreen.getHeight()) / 2) - 412);
             Dimension cardZoomSize = new Dimension(600, 825);
             cardZoomPanel.setBounds(cardZoomXpos, cardZoomYpos, cardZoomSize.width, cardZoomSize.height);
+            cardZoomPanel.setOpaque(false);
             cardZoomPanel.setVisible(false);
 
             collectionButtons.add(fromCollectiontoDesk);
@@ -396,28 +397,27 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             private String name; 
             private String type;
             private String rarity;
-            private String cardFrontImagePath;
+            private String cardImagePath;
             private boolean isBig = false;
             
             // Need to make sure cards are properly sorted in specific folders to be used here
-            public CardLabel(String cardFrontImagePath) {
+            public CardLabel(String cardImagePath) {
                 this.type = "card";
-                this.cardFrontImagePath = cardFrontImagePath;
+                this.cardImagePath = cardImagePath;
                 ImageIcon resizedImage = new ImageIcon();
-                resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardFrontImagePath)));
+                resizedImage = resizeCardImage(new ImageIcon(getClass().getResource(cardImagePath)));
                 setIcon(resizedImage);
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        if (event.isShiftDown()) {
-                            if (isBig == false) {
-                                String largeCardPath = cardFrontImagePath.replaceAll("smallCards", "largeCards");
-                                isBig = true;
-                                swapCardSize(largeCardPath);
+                        if (event.isShiftDown() && CardLabel.this.getParent() == displayArea && !CardLabel.this.getisBig()) {
+                            swapCardSize(CardLabel.this);       
                         }
-                        fromHandtoDesk();
+                        else if (CardLabel.this.getParent() == hand) {
+                            fromHandtoDesk();
+                        }                        
                     }
-                }});
+                });
             }
 
             public CardLabel(ImageIcon packImage) {
@@ -492,36 +492,8 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 }
             }
 
-            public void swapCardSize(String path) {                                     // PROB NEEDS TO BE IT'S OWN METHOD OUTSIDE THE CLASS
-                ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(path));
-                if (zoomedCard != null) {
-                    cardZoomPanel.remove(zoomedCard);
-                }
-                zoomedCard = new CardLabel(smallCardIcon);
-                if (this.getisBig()) {
-                    setisBig(false);
-                    zoomedCard.setisBig(true);
-                    zoomedCard.setFocusable(true);
-                    zoomedCard.requestFocusInWindow();
-                    zoomedCard.addFocusListener(new FocusAdapter() {
-                        @Override
-                        public void focusLost(FocusEvent event) {
-                            zoomedCard.setisBig(false);
-                            cardZoomPanel.remove(zoomedCard);
-                            cardZoomPanel.setVisible(false);
-                            collection.revalidate();
-                            collection.repaint();
-                        }
-                    });
-                    cardZoomPanel.add(zoomedCard, BorderLayout.CENTER);
-                    cardZoomPanel.setVisible(true);
-                    collection.revalidate();
-                    collection.repaint();
-                }
-            }
-
             public void shrinkCard() {
-                String smallCardImagePath = cardFrontImagePath.replaceAll("largeCards", "smallCards");
+                String smallCardImagePath = cardImagePath.replaceAll("largeCards", "smallCards");
                 ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
                 this.setIcon(smallCardIcon);
             }
@@ -559,7 +531,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             }
 
             public String getImagePath() {
-                return cardFrontImagePath;
+                return cardImagePath;
             }
         }
 
@@ -792,8 +764,32 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 }
             }
         }
-
         //*************************************
+
+        public void swapCardSize(CardLabel card) {
+            if (!card.getisBig()) {
+                String largeCardPath = card.getImagePath().replaceAll("smallCards", "largeCards");
+                zoomedCard = card;                
+                card.setisBig(true);
+                zoomedCard.setIcon(new ImageIcon(getClass().getResource(largeCardPath)));
+                displayArea.remove(card);
+                cardZoomPanel.add(zoomedCard);
+                cardZoomPanel.setVisible(true);
+                cardZoomPanel.revalidate();
+                cardZoomPanel.repaint();
+            }
+            else {
+                String smallCardPath = card.getImagePath().replaceAll("largeCards", "smallCards");
+                card.setIcon(new ImageIcon(getClass().getResource(smallCardPath)));
+                card.setisBig(false);
+                cardZoomPanel.remove(zoomedCard);
+                zoomedCard = null;
+                cardZoomPanel.setVisible(false);
+                updateDisplayArea(currCollection);
+                cardZoomPanel.revalidate();
+                cardZoomPanel.repaint();
+            }
+        }
 
         public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
             SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
