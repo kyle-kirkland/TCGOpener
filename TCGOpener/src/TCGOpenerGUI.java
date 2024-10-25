@@ -180,6 +180,14 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         private JLayeredPane createCollectionPanel() {
             collection = new JLayeredPane();
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
+            collection.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent event) {
+                    Component clickedComponent = event .getComponent();
+                    if (clickedComponent != zoomedCard) {
+                        swapCardSize();
+                    }
+            }});
 
             String deskImagePath = "/backgrounds/wood_desk.png";
             deskImage = new ImageIcon(getClass().getResource(deskImagePath)).getImage();
@@ -406,15 +414,10 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                                 String largeCardPath = cardFrontImagePath.replaceAll("smallCards", "largeCards");
                                 isBig = true;
                                 swapCardSize(largeCardPath);
-                            }
-                            else {
-                                isBig = false;
-                                swapCardSize(cardFrontImagePath);
-                            }
                         }
                         fromHandtoDesk();
                     }
-                });
+                }});
             }
 
             public CardLabel(ImageIcon packImage) {
@@ -489,7 +492,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 }
             }
 
-            public void swapCardSize(String path) {
+            public void swapCardSize(String path) {                                     // PROB NEEDS TO BE IT'S OWN METHOD OUTSIDE THE CLASS
                 ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(path));
                 if (zoomedCard != null) {
                     cardZoomPanel.remove(zoomedCard);
