@@ -55,15 +55,15 @@ import java.io.*;       /**
 *** TBD ***                     - wrapperDisplayArea JPanel (Default Layout) # (if added, won't be until much later, not messing with animations at the moment)  
 
 *** Things to do to wrap up project ***
-    - Add card zoom feature : DONE (ended up using a JPanel then adding a CardLabel (zoomedCard) to it with the corresponding image from largeCards folder)
+    - Add card zoom feature : *** DONE (ended up using a JPanel then adding a CardLabel (zoomedCard) to it with the corresponding image from largeCards folder)
     - Break down overall program into smaller classes
         - Class for building each screen (Desk, Collection, Welcome)
         - Class for building each card (CardLabel)
         - Class for building each pack (BoosterPack)
         - Maybe a class just containing a bunch of the random helper methods? Is that a thing that's done?
     - Identify which private fields can be made local to certain methods or even restrict to the broken off classes
-    - Add image for welcome screen (possibly take image used for desk and toss Pokemon logo over the buttons with a bunch of cards scattered    <--- DO NEXT
-        around facing up and down, todo in GIMP)
+    - Add image for welcome screen (possibly take image used for desk and toss Pokemon logo over the buttons with a bunch of cards scattered    *** DONE
+        around facing up and down, todo in GIMP)                                                                                                *** DONE
     - Add JavaDoc comments to all methods
     - Clean up random commented out code
     - Make sure to replace all of exceptions.printStackTrace() with proper logging
@@ -121,7 +121,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private Dimension packsize = new Dimension(300, 515);
     private Dimension cardHolderDimension = new Dimension(1200, 1000);
     private Dimension wideScreen = new Dimension(1920, 1080);
-    private Dimension smallScreen = new Dimension(1280, 720);
     private Image deskImage;
     private String[] commonCardNames;
     private String[] energyCardNames;
@@ -133,8 +132,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
     private boolean rareLast = false;
     private int handStartX = (wideScreen.width - packsize.width) - 150;
     private int handStartY = (wideScreen.height - packsize.height) - 200;
-    private int sshandStartX = (smallScreen.width - packsize.width) - 150;
-    private int sshandStartY = (smallScreen.height - packsize.height) - 200;
     private int[] startIndex = {0, 0, 0, 0, 0, 0};      // int[0] = overall, int [1] = common, int[2] = energy,
     private int[] endIndex = {12, 12, 12, 12, 12, 12};  // int[3] = uncommon, int[4] = rare, int[5] = holo
     private int[] currIndex = {0, 0, 0, 0, 0, 0};
@@ -167,10 +164,13 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             gbConst = new GridBagConstraints();
 
             fromWelcometoDesk = new JButton("Start Opening Packs");
-            fromWelcometoDesk.addActionListener(event -> switchPanel("Desk")); // *** LAMBDA ***
+            fromWelcometoDesk.addActionListener(event -> switchPanel("Desk"));
 
             fromWelcometoCollection = new JButton("Show Current Collection");            
-            fromWelcometoCollection.addActionListener(event -> switchPanel("Collection"));  // *** LAMBDA ***
+            fromWelcometoCollection.addActionListener(event -> {
+                sortCollections();
+                switchPanel("Collection");
+            });
 
             gbConst.insets = new Insets(5, 5, 5, 5);
             gbConst.gridx = 0;
@@ -223,7 +223,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
 
             JComboBox<String> chooseCollection = new JComboBox<>(new String[]{"Overall Collection", "Common", "Energy", "Uncommon", "Rare", "Holo"});
             chooseCollection.setSelectedIndex(0);
-            chooseCollection.addActionListener(event -> {                       // *** LAMBDA ***
+            chooseCollection.addActionListener(event -> {
                 int chosenCollection = chooseCollection.getSelectedIndex();
                 switch (chosenCollection) {
                     case 0:
@@ -266,7 +266,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             });
 
             fromCollectiontoDesk = new JButton("To Desk");
-            fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk"));           // *** LAMBDA ***
+            fromCollectiontoDesk.addActionListener(event -> switchPanel("Desk"));
             openBinder = new JButton("Open Binder");
             openBinder.addActionListener(event -> {
                 nextPage.setVisible(true);
@@ -276,10 +276,10 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 updateDisplayArea(currCollection);
             });
             nextPage = new JButton("Next Page");
-            nextPage.addActionListener(event -> nextButton(currCollection));     // *** LAMBDA ***
+            nextPage.addActionListener(event -> nextButton(currCollection));
             nextPage.setVisible(false);
             previousPage = new JButton("Previous Page");
-            previousPage.addActionListener(event -> previousButton(currCollection));     // *** LAMBDA ***
+            previousPage.addActionListener(event -> previousButton(currCollection));
             previousPage.setVisible(false);
 
             cardZoomPanel = new JPanel();
@@ -310,8 +310,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         private JLayeredPane createDeskPane() {
-            // Add menu to select the reveal method, use Event.getActionCommand() 
-            // method in actionPerformed for menus
             desk1 = new JLayeredPane();
             desk1.setPreferredSize(wideScreen); 
 
@@ -342,13 +340,13 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             cardHolder.setBounds(25, 25, cardHolderDimension.width, cardHolderDimension.height);
 
             newPack = new JButton("Open New Pack");
-            newPack.addActionListener(event -> openNewPack(hand));                    // *** LAMBDA w/ SwingWorker IMPLEMENTATION ***
+            newPack.addActionListener(event -> openNewPack(hand));
             revealNormal = new JButton("Reveal Normal Order");
-            revealNormal.addActionListener(event -> revealCards(false));    // *** LAMBDA ***
+            revealNormal.addActionListener(event -> revealCards(false));
             revealRare = new JButton("Reveal Rare Last");
-            revealRare.addActionListener(event -> revealCards(true));       // *** LAMBDA ***
+            revealRare.addActionListener(event -> revealCards(true));
             fromDesktoCollection = new JButton("To Collection");
-            fromDesktoCollection.addActionListener(event -> {                         // *** LAMBDA ***
+            fromDesktoCollection.addActionListener(event -> {
                 switchPanel("Collection");
                 sortCollections();
             });
@@ -399,7 +397,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             setSize(wideScreen); 
             add(root);
         }
-        /** CardLabel class that is used to create each card and pack */
+        
         public class CardLabel extends JLabel{
             private String name; 
             private String type;
@@ -407,7 +405,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             private String cardImagePath;
             private boolean isBig = false;
             
-            // Need to make sure cards are properly sorted in specific folders to be used here
             public CardLabel(String cardImagePath) {
                 this.type = "card";
                 this.cardImagePath = cardImagePath;
@@ -438,14 +435,13 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 });
             }
             public void fromHandtoDesk() {
-                // moving from hand to cardHolder
                 if (this.type.equalsIgnoreCase("pack")) {
                     hand.remove(this);
                     hand.revalidate();
                     hand.repaint();
                 }
 
-                else if (this.type.equalsIgnoreCase("card") && hand.isAncestorOf(this)) { // *** SECOND USE OF SwingWorker HAD AI HELP HERE BUT I UNDERSTAND A LITTLE BETTER NOW***
+                else if (this.type.equalsIgnoreCase("card") && hand.isAncestorOf(this)) {
                     hand.remove(this);
                     hand.revalidate();
                     hand.repaint();
@@ -460,16 +456,16 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                             return null;
                         }
                         @Override
-                        protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                        protected void done() {
                             try {
-                                get(); // *** RETRIEVES ANYTHING DONE IN THE BACKGROUND, INCLUDING ERRORS TO BE PRINTED ***
-                                addToCardHolder(); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                                get();
+                                addToCardHolder();
                             } catch (Exception exception) {
                                 exception.printStackTrace();
                             }
                         }
                     };
-                    bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
+                    bgThread.execute();
                 }
             }
 
@@ -542,13 +538,14 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             }
         }
 
-        /** ActionListener for buttons that can't use a lambda expression */
+        /**
+         * Method required for implementation of ActionListener interface 
+        */
         @Override
         public void actionPerformed(ActionEvent event) {
-            // This may remain empty, we'll see
+            
         }
 
-        /** Methods for lambda expressions */
         private void switchPanel(String panelName) {
             CardLayout layout = (CardLayout) root.getLayout();
             layout.show(root, panelName);
@@ -750,29 +747,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             }
         }
 
-        //*************************************     SHOULDN'T NEED WHEN PROJECT IS DONE, MAYBE
-        public void clearAllCsvFiles() {
-            String[] csvFiles = {
-                "TCGOpener/src/data/overallCollection.csv",
-                "TCGOpener/src/data/commonCollection.csv",
-                "TCGOpener/src/data/uncommonCollection.csv",
-                "TCGOpener/src/data/energyCollection.csv",
-                "TCGOpener/src/data/rareCollection.csv",
-                "TCGOpener/src/data/holoCollection.csv"
-            };
-        
-            for (String filePath : csvFiles) {
-                try (FileWriter writer = new FileWriter(filePath, false)) {
-                    // Create a FileWriter without the append flag to overwrite the file content
-                    writer.write(""); 
-                } catch (IOException e) {
-                    System.err.println("Error clearing file: " + filePath);
-                    e.printStackTrace();
-                }
-            }
-        }
-        //*************************************
-
         public void swapCardSize(CardLabel card) {
             if (!card.getisBig()) {
                 String largeCardPath = card.getImagePath().replaceAll("smallCards", "largeCards");
@@ -798,28 +772,24 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             }
         }
 
-        public void openNewPack(JLayeredPane inputPane) { // *** FIRST USE OF SwingWorker DEFINITLEY HAD AI HELP HERE ***
+        public void openNewPack(JLayeredPane inputPane) {
             SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
                 @Override
                 protected ArrayList<CardLabel> doInBackground() throws Exception {
-                    
-                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
-                    clearAllCsvFiles();
-                    // **********************************   NEED TO REMOVE WHEN PROJECT IS COMPLETE   **********************************
                     return packCards();
                 }
 
                 @Override
-                protected void done() { // *** TELLS THE PROGRAM THAT THE BACKGROUND THREAD HAS FINISHED ***
+                protected void done() {
                     try {
-                        ArrayList<CardLabel> currentPack = get(); // *** RETRIEVES THE ArrayList<CardLabel> FROM BACKGROUND THREAD ***
+                        ArrayList<CardLabel> currentPack = get();
                         cardHolder.removeAll();
                         cardHolder.revalidate();
                         cardHolder.repaint();
                         hand.removeAll();
                         hand.revalidate();
                         hand.repaint();
-                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height); // *** EXECUTION RESUMES ON EDT TO UPDATE GUI ***
+                        currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height);
                         currentPack.get(0).setVisible(true);
                         inputPane.add(currentPack.get(0));
                         for (int i = 1; i < (currentPack.size()); i++) {
@@ -836,7 +806,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                     }
                 }
             };
-            bgThread.execute(); // *** STARTS THE BACKGROUND THREAD, SUPER IMPORTANT DON'T FORGET ***
+            bgThread.execute();
         }
 
         public ArrayList<CardLabel> packCards() {
@@ -926,7 +896,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             *      - 1 rare
             *      - 3 uncommon
             */
-
             int[] pack = new int[12];
             if (!rareLast) {
                 pack[0] = 0;
@@ -1051,7 +1020,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             boosterPack.revalidate();
             boosterPack.repaint();
 
-            // Normal card reveal method
             if (!rareLast) {
                 for (int i = 1; i < pack.length; i++) {
                     if (i >= 1 && i < 6) {
@@ -1095,7 +1063,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
                 }
                 
             }
-            // Reveal rare card last method
+
             else if (rareLast) {
                 for (int j = 1; j < pack.length; j++) {
                     if (j >= 1 && j < 6) {
