@@ -153,7 +153,15 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         private JPanel createWelcomescreenPanel() {
-            welcomescreen = new JPanel(new GridBagLayout());
+            String wecomeImagePath = "/backgrounds/wood_desk_Welcome_Screen.png";
+            Image welcomeImage = new ImageIcon(getClass().getResource(wecomeImagePath)).getImage();
+            welcomescreen = new JPanel(new GridBagLayout()) { 
+                @Override
+                public void paintComponent(Graphics graphic) {
+                    super.paintComponent(graphic);
+                    graphic.drawImage(welcomeImage, 0, 0, getWidth(), getHeight(), this);
+                }
+            };
             welcomescreen.setPreferredSize(wideScreen); 
 
             gbConst = new GridBagConstraints();
@@ -178,7 +186,6 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
         }
 
         private JLayeredPane createCollectionPanel() {
-            String tempZoomedPath = "/cardImages/largeCards/common/'Abra'common(1).jpg";
             collection = new JLayeredPane();
             collection.setBounds(0, 0, wideScreen.width, wideScreen.height);
             collection.addMouseListener(new MouseAdapter() {
