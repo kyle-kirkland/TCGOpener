@@ -1,7 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class BuildWelcomeScreen {
+public class WelcomeScreen {
     private JPanel welcomescreen;
     private GridBagConstraints gbConst;
     private JButton fromWelcometoDesk;

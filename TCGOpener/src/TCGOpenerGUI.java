@@ -86,6 +86,7 @@ import java.io.*;       /**
 */
 
 public class TCGOpenerGUI extends JFrame implements ActionListener {
+    
     private JPanel root;
     private JPanel welcomescreen;
     private JLayeredPane collection;
@@ -397,7 +398,7 @@ public class TCGOpenerGUI extends JFrame implements ActionListener {
             setSize(wideScreen); 
             add(root);
         }
-        
+
         public class CardLabel extends JLabel{
             private String name; 
             private String type;

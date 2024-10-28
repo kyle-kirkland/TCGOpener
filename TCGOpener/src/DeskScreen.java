@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-public class BuildDeskScreen {
+public class DeskScreen {
     private JLayeredPane desk1;
     private JPanel desk1Panel;
     private JLayeredPane hand;

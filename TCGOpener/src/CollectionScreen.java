@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-public class BuildCollectionScreen {
+public class CollectionScreen {
     private JLayeredPane collection;
     private JPanel desk2;
     private JPanel displayArea;
