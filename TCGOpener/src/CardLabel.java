@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class CardLabel extends JLabel{
+    private Dimension packsize = new Dimension(300, 515);
     private String name; 
     private String type;
     private String rarity;
@@ -141,5 +142,22 @@ public class CardLabel extends JLabel{
 
     public String getImagePath() {
         return cardImagePath;
+    }
+
+    public ImageIcon resizePackImage(ImageIcon currentIcon) {
+        ImageIcon newIcon;
+        Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
+        newIcon = new ImageIcon(resizedImage);
+
+        return newIcon;
+    }
+
+    public ImageIcon resizeCardImage(ImageIcon currentIcon) {
+        ImageIcon newIcon;
+        Dimension cardsize = new Dimension(300, 413);
+        Image resizedImage = currentIcon.getImage().getScaledInstance(cardsize.width, cardsize.height, Image.SCALE_SMOOTH);
+        newIcon = new ImageIcon(resizedImage);
+
+        return newIcon;
     }
 }

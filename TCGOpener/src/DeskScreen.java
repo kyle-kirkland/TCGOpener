@@ -36,7 +36,6 @@ public class DeskScreen {
             }
         };
         desk1Panel.setPreferredSize(wideScreen);
-        desk1Panel.setBackground(Color.GRAY);
         desk1Panel.setBounds(0, 0, wideScreen.width, wideScreen.height); 
 
         hand = new JLayeredPane();
@@ -87,5 +86,42 @@ public class DeskScreen {
         desk1.repaint();
 
         return desk1;
+    }
+
+    public void openNewPack(JLayeredPane inputPane) {
+        SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
+            @Override
+            protected ArrayList<CardLabel> doInBackground() throws Exception {
+                return packCards();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    ArrayList<CardLabel> currentPack = get();
+                    cardHolder.removeAll();
+                    cardHolder.revalidate();
+                    cardHolder.repaint();
+                    hand.removeAll();
+                    hand.revalidate();
+                    hand.repaint();
+                    currentPack.get(0).setBounds(0, 0, packsize.width, packsize.height);
+                    currentPack.get(0).setVisible(true);
+                    inputPane.add(currentPack.get(0));
+                    for (int i = 1; i < (currentPack.size()); i++) {
+                        currentPack.get(i).setBounds(0, 51, packsize.width, 413);
+                        currentPack.get(i).setVisible(true);
+                        inputPane.add(currentPack.get(i));
+                    }
+                    cardHolder.revalidate();
+                    cardHolder.repaint();
+                    hand.revalidate();
+                    hand.repaint();
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+            }
+        };
+        bgThread.execute();
     }
 }
