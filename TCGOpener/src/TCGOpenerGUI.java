@@ -18,6 +18,10 @@ import java.io.*;       /**
  * Main class for the Trading Card Game Opening Simulator.
  * Handles the GUI, user interactions, and card collection management.
  * @author Kyle Kirkland
+ * @see "https://github.com/cybermatt99/Pokemon-Pack-Opening-Simulator.git" for the inspiration behind the project that I expanded upon and
+ *      also translated from python. 
+ * @see "https://chat.openai.com" was used as a reference in order to use SwingWorker and also how to use html for basic formatting in the 
+ *      guide. 
  */
 public class TCGOpenerGUI extends JFrame {
     
