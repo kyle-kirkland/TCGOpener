@@ -254,7 +254,12 @@ public class TCGOpenerGUI extends JFrame {
 
         return collection;
     }
-
+    /**
+     * Creates the desk panel for opening packs.
+     * This panel includes the desk background, card holder, and buttons for user interactions.
+     * 
+     * @return JLayeredPane representing the desk panel.
+     */
     private JLayeredPane createDeskPane() {
         desk1 = new JLayeredPane();
         desk1.setPreferredSize(wideScreen); 
@@ -322,7 +327,11 @@ public class TCGOpenerGUI extends JFrame {
 
         return desk1;
     }
-
+    /**
+     * Creates the main panel of the application.
+     * Initializes the root panel using a CardLayout to handle different screens (Welcome, Collection, Desk).
+     * Adds the panels to the root and sets up the frame properties.
+     */
     private void createMainPanel() {
         root = new JPanel(new CardLayout());
         root.setPreferredSize(wideScreen); 
@@ -343,14 +352,21 @@ public class TCGOpenerGUI extends JFrame {
         setSize(wideScreen); 
         add(root);
     }
-
+    /**
+     * Class representing a label for a card in the Trading Card Game Opening Simulator.
+     * Extends JLabel to add card-specific properties and behavior.
+     */
     public class CardLabel extends JLabel{
         private String name; 
         private String type;
         private String rarity;
         private String cardImagePath;
         private boolean isBig = false;
-            
+        /**
+         * Constructor for creating a CardLabel object representing a card.
+         *
+         * @param cardImagePath Path to the card image.
+         */  
         public CardLabel(String cardImagePath) {
             this.type = "card";
             this.cardImagePath = cardImagePath;
@@ -369,7 +385,11 @@ public class TCGOpenerGUI extends JFrame {
                 }
             });
         }
-
+        /**
+         * Constructor for creating a CardLabel object representing a booster pack.
+         *
+         * @param packImage ImageIcon representing the booster pack.
+         */
         public CardLabel(ImageIcon packImage) {
             this.type = "pack";
             setIcon(packImage);
@@ -380,6 +400,10 @@ public class TCGOpenerGUI extends JFrame {
                 }
             });
         }
+        /**
+         * Moves the card from the hand to the desk.
+         * Handles both booster packs and individual cards.
+         */
         public void fromHandtoDesk() {
             if (this.type.equalsIgnoreCase("pack")) {
                 hand.remove(this);
@@ -414,12 +438,17 @@ public class TCGOpenerGUI extends JFrame {
                 bgThread.execute();
             }
         }
-
+        /**
+         * Adds the card to the cardHolder panel on the desk.
+         */
         public void addToCardHolder() {
             cardHolder.add(this);
             cardHolder.revalidate();
             cardHolder.repaint();
         }
+        /**
+         * Adds the card to the appropriate collection based on its rarity.
+         */
         public void addToCollection() {
             overallCollection.add(this);
             switch (this.rarity) {
@@ -440,65 +469,121 @@ public class TCGOpenerGUI extends JFrame {
                     break;
             }
         }
-
+        /**
+         * Shrinks the card image from its large version to its smaller version.
+         */
         public void shrinkCard() {
             String smallCardImagePath = cardImagePath.replaceAll("largeCards", "smallCards");
             ImageIcon smallCardIcon = new ImageIcon(getClass().getResource(smallCardImagePath));
             this.setIcon(smallCardIcon);
         }
-
+        /**
+         * Sets the type of the card.
+         *
+         * @param type The type of the card.
+         */
         public void setType(String type) {
             this.type = type;
         }
-
+        /**
+         * Gets the type of the card.
+         *
+         * @return The type of the card.
+         */
         public String getType() {
             return type;
         }
-
+        /**
+         * Sets the name of the card.
+         *
+         * @param name The name of the card.
+         */
         public void setName(String name) {
             this.name = name;
         }
-            
+        /**
+         * Gets the name of the card.
+         *
+         * @return The name of the card.
+         */    
         public String getName() {
             return this.name;
         }
-
+        /**
+         * Sets the rarity of the card.
+         *
+         * @param rarity The rarity of the card.
+         */
         public void setRarity(String rarity) {
             this.rarity = rarity;
         }
-
+        /**
+         * Gets the rarity of the card.
+         *
+         * @return The rarity of the card.
+         */
         public String getRarity() {
             return rarity;
         }
-
+        /**
+         * Sets whether the card is in a zoomed-in state.
+         *
+         * @param isBig True if the card is zoomed in, false otherwise.
+         */
         public void setisBig(boolean isBig) {
             this.isBig = isBig;
         }
-
+        /**
+         * Gets whether the card is in a zoomed-in state.
+         *
+         * @return True if the card is zoomed in, false otherwise.
+         */
         public boolean getisBig() {
             return isBig;
         }
-
+        /**
+         * Gets the image path of the card.
+         *
+         * @return The image path of the card.
+         */
         public String getImagePath() {
             return cardImagePath;
         }
     }
-
+    /**
+     * Switches the displayed panel to the one specified by panelName.
+     *
+     * @param panelName The name of the panel to be displayed.
+     */
     private void switchPanel(String panelName) {
         CardLayout layout = (CardLayout) root.getLayout();
         layout.show(root, panelName);
     }
-
+    /**
+     * Sets the reveal mode for the cards.
+     * If the parameter is true, the rare card will be revealed last.
+     *
+     * @param lastOrNot True if the rare card should be revealed last, false otherwise.
+     */
     public void revealCards(boolean lastOrNot) {
         rareLast = lastOrNot;
     }
-
+    /**
+     * Adds the specified card to the display area.
+     *
+     * @param currCard The CardLabel to be added to the display area.
+     */
     public void addCardstoDisplayArea(CardLabel currCard) {
         displayArea.add(currCard);
         displayArea.revalidate();
         displayArea.repaint();
     }
 
+    /**
+     * Moves to the next set of cards in the current collection to be displayed.
+     *
+     * @param currCollection The collection of cards currently being displayed.
+     */
     public void nextButton(ArrayList<CardLabel> currCollection) {
         chosenStartIndex += 12;
         chosenEndIndex += 12;
@@ -513,7 +598,11 @@ public class TCGOpenerGUI extends JFrame {
 
         updateDisplayArea(currCollection);
     }
-
+    /**
+     * Moves to the previous set of cards in the current collection to be displayed.
+     *
+     * @param currCollection The collection of cards currently being displayed.
+     */
     public void previousButton(ArrayList<CardLabel> currCollection) {
         chosenStartIndex -= 12;
         chosenEndIndex -= 12;
@@ -530,7 +619,13 @@ public class TCGOpenerGUI extends JFrame {
 
         updateDisplayArea(currCollection);
     }
-
+    /**
+     * Updates the display area to show the current set of cards from the collection.
+     * This method removes all cards currently in the display area and adds the set of cards
+     * based on the chosen start and end indices.
+     *
+     * @param currCollection The collection of cards currently being displayed.
+     */
     public void updateDisplayArea(ArrayList<CardLabel> currCollection) {
         displayArea.removeAll();
         for (int i = chosenStartIndex; i < chosenEndIndex; i++) {
@@ -564,7 +659,11 @@ public class TCGOpenerGUI extends JFrame {
         displayArea.revalidate();
         displayArea.repaint();
     }
-
+    /**
+     * Sorts all card collections in alphabetical order based on card names.
+     * This method uses a background SwingWorker to perform sorting operations
+     * on each of the collections if the size of the collection has changed.
+     */
     public void sortCollections() {
         SwingWorker<Void, Void> sortWorker = new SwingWorker<>() {
             @Override
@@ -609,7 +708,11 @@ public class TCGOpenerGUI extends JFrame {
 
         sortWorker.execute();
     }
-
+    /**
+     * Sets the sizes of all the card collections and returns them as an array.
+     * 
+     * @return An array representing the sizes of each card collection.
+     */
     public int[] setCollectionSizes() {
         int[] tempCollectionSizes = new int[6];
         tempCollectionSizes[0] = overallCollection.size();
@@ -621,7 +724,10 @@ public class TCGOpenerGUI extends JFrame {
 
         return tempCollectionSizes;
     }
-
+    /**
+     * Saves all card collections to CSV files.
+     * This method writes each card collection to its respective CSV file, saving details like card name, image path, and rarity.
+     */
     public void saveCollectionToCSVs() {
         saveCardsToCSV(overallCollection, "TCGOpener/src/data/overallCollection.csv");
         saveCardsToCSV(commonCollection, "TCGOpener/src/data/commonCollection.csv");
@@ -630,7 +736,13 @@ public class TCGOpenerGUI extends JFrame {
         saveCardsToCSV(rareCollection, "TCGOpener/src/data/rareCollection.csv");
         saveCardsToCSV(holoCollection, "TCGOpener/src/data/holoCollection.csv");
     }
-
+    /**
+     * Saves a given list of cards to a CSV file.
+     * Each card is saved with its name, image path, and rarity.
+     * 
+     * @param cardList The list of CardLabel objects to be saved.
+     * @param fileName The name of the CSV file to save the cards to.
+     */
     private void saveCardsToCSV(ArrayList<CardLabel> cardList, String fileName) {
         try (FileWriter writer = new FileWriter(fileName)) {
             for (CardLabel card : cardList) {
@@ -646,7 +758,10 @@ public class TCGOpenerGUI extends JFrame {
             e.printStackTrace();
         }
     }
-
+    /**
+     * Builds the collection of cards from CSV files.
+     * This method reads each card collection from its respective CSV file and populates the collection lists.
+     */
     public void buildCollectionFromCSVs() {
         readCardsFromCSV(overallCollection, "/data/overallCollection.csv");
         readCardsFromCSV(commonCollection, "/data/commonCollection.csv");
@@ -655,7 +770,13 @@ public class TCGOpenerGUI extends JFrame {
         readCardsFromCSV(rareCollection, "/data/rareCollection.csv");
         readCardsFromCSV(holoCollection, "/data/holoCollection.csv");
     }
-
+    /**
+     * Reads cards from a CSV file and adds them to the given list of cards.
+     * Each card is read and instantiated as a CardLabel object, then added to the provided collection list.
+     * 
+     * @param listOfCards The list to add the read cards to.
+     * @param csvPath The path of the CSV file to read the cards from.
+     */
     public void readCardsFromCSV(ArrayList<CardLabel> listOfCards, String csvPath) {
         try {InputStream inStream = getClass().getResourceAsStream(csvPath);
             if (inStream == null) {
@@ -684,7 +805,12 @@ public class TCGOpenerGUI extends JFrame {
             e.printStackTrace();
         }
     }
-
+    /**
+     * Swaps the size of a given card between small and large.
+     * If the card is small, it will be enlarged, and vice versa. The enlarged card is displayed in the zoom panel.
+     * 
+     * @param card The CardLabel to swap size.
+     */
     public void swapCardSize(CardLabel card) {
         if (!card.getisBig()) {
             String largeCardPath = card.getImagePath().replaceAll("smallCards", "largeCards");
@@ -709,7 +835,10 @@ public class TCGOpenerGUI extends JFrame {
             cardZoomPanel.repaint();
         }
     }
-
+    /**
+     * Displays the user guide for the Trading Card Opening Simulator.
+     * This guide provides an overview of the features and functionalities of the program.
+     */
     public static void displayUserGuide() {
         String userGuideText = "<html>" +
             "<h1><b>Trading Card Opening Sim User Guide</b></h1>" +
@@ -741,7 +870,12 @@ public class TCGOpenerGUI extends JFrame {
             "<p><b>User Guide Shortcut:</b> Press Ctrl + G at any time to view this guide again.</p>";      
         JOptionPane.showMessageDialog(null, userGuideText, "User Guide", JOptionPane.INFORMATION_MESSAGE);
     }
-
+    /**
+     * Opens a new booster pack in the specified pane.
+     * This method runs a background task to build and display a new pack of cards.
+     * 
+     * @param inputPane The JLayeredPane to which the new pack of cards will be added.
+     */
     public void openNewPack(JLayeredPane inputPane) {
         SwingWorker<ArrayList<CardLabel>, Void> bgThread = new SwingWorker<>() {
             @Override
@@ -778,36 +912,61 @@ public class TCGOpenerGUI extends JFrame {
         };
         bgThread.execute();
     }
-
+    /**
+     * Builds a new booster pack of cards.
+     * 
+     * @return ArrayList of CardLabel objects representing the cards in the pack.
+     */
     public ArrayList<CardLabel> packCards() {
         ArrayList<CardLabel> currentPack = new ArrayList<CardLabel>(assignImagestoPack(buildPack()));
         return currentPack;
     }
-
+    /**
+     * Generates a random index for selecting a common card.
+     * 
+     * @return Random integer representing the common card index.
+     */
     public int randCommon() {
         Random rng = new Random();
         int common = rng.nextInt(32) + 1;
         return common;
     }
-
+    /**
+     * Generates a random index for selecting an uncommon card.
+     * 
+     * @return Random integer representing the uncommon card index.
+     */
     public int randUncommon() {
         Random rng = new Random();
         int uncommon = rng.nextInt(32) + 1;
         return uncommon;
     }
-
+    /**
+     * Generates a random index for selecting a rare card.
+     * 
+     * @return Random integer representing the rare card index.
+     */
     public int randRare() {
         Random rng = new Random();
         int rare = rng.nextInt(16) + 1;
         return rare;
     }
-
+    /**
+     * Generates a random index for selecting an energy card.
+     * 
+     * @return Random integer representing the energy card index.
+     */
     public int randEnergy() {
         Random rng = new Random();
         int energy = rng.nextInt(6) + 1;
         return energy;
     }
-
+    /**
+     * Ensures that the card list has no duplicates by reassigning duplicate cards.
+     * 
+     * @param cardList The initial list of card indices.
+     * @return Modified list of card indices with no duplicates.
+     */
     public int[] noDupes(int[] cardList) {
         int[] newCardList = new int[cardList.length];
         for (int i = 0; i < cardList.length; i++) {
@@ -859,7 +1018,11 @@ public class TCGOpenerGUI extends JFrame {
         }
         return newCardList;
     }
-        
+    /**
+     * Builds a booster pack with the appropriate distribution of card types.
+     * 
+     * @return An array representing the indices of the cards in the pack.
+     */        
     public int[] buildPack() {
         /**      
         *      - 5 commons
@@ -902,7 +1065,11 @@ public class TCGOpenerGUI extends JFrame {
 
         return newPack;
     }
-
+    /**
+     * Sets the names of all cards categorized by their types.
+     * 
+     * @return A two-dimensional array containing the names of the cards.
+     */
     public String[][] setAllCardNames() {
         String[][] allCardNames = new String[5][];
         String[] commonNames = {"'FILLER'", "'Abra'", "'Bulbasaur'", "'Caterpie'", "'Charmander'", "'Diglett'", "'Doduo'", "'Drowzee'", "'Gastly'", "'Koffing'", "'Machop'", "'Magnemite'", 
@@ -927,7 +1094,12 @@ public class TCGOpenerGUI extends JFrame {
 
         return allCardNames;
     }
-
+    /**
+     * Resizes the pack image to the desired size for the GUI.
+     * 
+     * @param currentIcon The ImageIcon representing the pack.
+     * @return The resized ImageIcon.
+     */
     public ImageIcon resizePackImage(ImageIcon currentIcon) {
         ImageIcon newIcon;
         Image resizedImage = currentIcon.getImage().getScaledInstance(packsize.width, packsize.height, Image.SCALE_SMOOTH);
@@ -935,7 +1107,12 @@ public class TCGOpenerGUI extends JFrame {
 
         return newIcon;
     }
-
+    /**
+     * Resizes a card image to a specific standard size for displaying in the GUI.
+     * 
+     * @param currentIcon The ImageIcon representing the card.
+     * @return The resized ImageIcon.
+     */
     public ImageIcon resizeCardImage(ImageIcon currentIcon) {
         ImageIcon newIcon;
         Dimension cardsize = new Dimension(300, 413);
@@ -944,7 +1121,11 @@ public class TCGOpenerGUI extends JFrame {
 
         return newIcon;
     }
-
+    /**
+     * Randomly selects one of the available booster pack images to display.
+     * 
+     * @return The ImageIcon representing the selected booster pack.
+     */
     private ImageIcon randomPack() {
         String venusaurPackPath = "/card_packs/venusaur_pack.jpg";
         String charizardPackPath = "/card_packs/charizard_pack.jpg";
@@ -971,14 +1152,24 @@ public class TCGOpenerGUI extends JFrame {
         }
         return randomPackImage;
     }
-
+    /**
+     * Fixes a card name by replacing underscores and removing quotes.
+     * 
+     * @param cardName The name of the card to be fixed.
+     * @return The fixed card name.
+     */
     public String fixCardName(String cardName) {
         String name = "";
         name = cardName.replaceAll("_", " ");
         name = name.replaceAll("'", "");
         return name;
     }
-
+    /**
+     * Assigns images to a booster pack of cards based on the given indices.
+     * 
+     * @param pack The array of card indices representing the cards in the pack.
+     * @return An ArrayList of CardLabel objects with assigned images.
+     */
     public ArrayList<CardLabel> assignImagestoPack(int[] pack) {
         ArrayList <CardLabel> packImages = new ArrayList<CardLabel>();
         String[][] allCardNames = setAllCardNames();
